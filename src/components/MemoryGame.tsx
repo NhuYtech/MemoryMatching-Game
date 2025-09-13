@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { GameHome } from './GameHome';
-import { GameBoard } from './GameBoard';
+import GameBoard from './GameBoard';
 import { Leaderboard } from './Leaderboard';
 import { GameLevel, GameResult } from '@/types/game';
 

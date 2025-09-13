@@ -19,16 +19,16 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
   const [selectedLevel, setSelectedLevel] = useState<GameLevel>(GAME_LEVELS[0]);
 
   const handleStartGame = () => {
-    if (playerName.trim()) {
+    if (playerName.trim() && selectedLevel) {
       onStartGame(playerName.trim(), selectedLevel);
     }
   };
 
   const getLevelColor = (levelName: string) => {
     switch (levelName) {
-      case 'Easy': return 'bg-green-100 text-green-800 border-green-300';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'Hard': return 'bg-red-100 text-red-800 border-red-300';
+      case 'Easy': return 'level-badge-easy';
+      case 'Medium': return 'level-badge-medium';
+      case 'Hard': return 'level-badge-hard';
       default: return 'bg-gray-100 text-gray-800 border-gray-300';
     }
   };
@@ -72,8 +72,8 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
                 placeholder="Nhập tên của bạn..."
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleStartGame()}
-                className="text-center"
+                onKeyPress={(e) => e.key === "Enter" && handleStartGame()}
+                className="input-primary"
               />
             </div>
 
@@ -85,13 +85,9 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
                   <button
                     key={level.name}
                     onClick={() => setSelectedLevel(level)}
-                    className={`
-                      w-full p-3 rounded-lg border-2 transition-all duration-200
-                      ${selectedLevel.name === level.name 
-                        ? 'border-primary bg-primary/10 shadow-lg' 
-                        : 'border-border bg-card hover:bg-muted'
-                      }
-                    `}
+                    className={`level-card ${
+                      selectedLevel?.name === level.name ? 'selected' : ''
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -129,10 +125,10 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
             </div>
 
             {/* Start Button */}
-            <Button 
+            <Button
               onClick={handleStartGame}
-              disabled={!playerName.trim()}
-              className="w-full bg-gradient-primary hover:opacity-90 text-lg py-6"
+              disabled={!playerName.trim() || !selectedLevel}
+              className="btn-primary"
               size="lg"
             >
               <Play className="w-5 h-5 mr-2" />
@@ -140,10 +136,10 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
             </Button>
 
             {/* Leaderboard Button */}
-            <Button 
+            <Button
               onClick={onViewLeaderboard}
               variant="outline"
-              className="w-full"
+              className="btn-secondary"
               size="lg"
             >
               <Trophy className="w-5 h-5 mr-2" />

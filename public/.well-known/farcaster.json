@@ -1,0 +1,9 @@
+{
+  "name": "Memory Matching Game",
+  "slug": "memory-matching-game",
+  "description": "Mini game trí nhớ vui nhộn, chơi nhanh trong Farcaster feed",
+  "icon": "/icon.png",
+  "splash": "/splash.png",
+  "og_image": "/og-image.png",
+  "platforms": ["farcaster"]
+}

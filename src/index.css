@@ -1,117 +1,56 @@
-@tailwind base;
-@tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Design system - all colors must be HSL */
+:root {
+  --background: 225 100% 97%;
+  --foreground: 225 15% 15%;
 
-@layer base {
-  :root {
-    --background: 225 100% 97%;
-    --foreground: 225 15% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 225 15% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 225 15% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 225 15% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 225 15% 15%;
+  --primary: 263 70% 60%;
+  --primary-foreground: 0 0% 100%;
 
-    --primary: 263 70% 60%;
-    --primary-foreground: 0 0% 100%;
+  --secondary: 45 100% 85%;
+  --secondary-foreground: 45 15% 25%;
 
-    --secondary: 45 100% 85%;
-    --secondary-foreground: 45 15% 25%;
+  --muted: 225 25% 92%;
+  --muted-foreground: 225 15% 45%;
 
-    --muted: 225 25% 92%;
-    --muted-foreground: 225 15% 45%;
+  --accent: 195 85% 65%;
+  --accent-foreground: 0 0% 100%;
 
-    --accent: 195 85% 65%;
-    --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+  --border: 225 25% 85%;
+  --input: 225 25% 85%;
+  --ring: 263 70% 60%;
 
-    --border: 225 25% 85%;
-    --input: 225 25% 85%;
-    --ring: 263 70% 60%;
+  /* Game colors */
+  --game-board: 225 50% 95%;
+  --card-back: 263 25% 85%;
+  --card-front: 0 0% 100%;
+  --card-matched: 45 100% 70%;
+  --card-shadow: 225 25% 75%;
 
-    /* Game specific colors */
-    --game-board: 225 50% 95%;
-    --card-back: 263 25% 85%;
-    --card-front: 0 0% 100%;
-    --card-matched: 45 100% 70%;
-    --card-shadow: 225 25% 75%;
-
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(263 70% 60%), hsl(195 85% 65%));
-    --gradient-game: linear-gradient(145deg, hsl(225 100% 97%), hsl(225 50% 95%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(225 25% 97%));
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+  --radius: 0.5rem;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  /* Các màu dark mode khác ở đây… */
+}
 
-  body {
-    @apply bg-background text-foreground;
-  }
+/* Base styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  @apply bg-background text-foreground m-0 font-sans;
 }

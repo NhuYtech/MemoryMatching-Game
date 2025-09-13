@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import { GameCard } from './GameCard';
-import { GameCard as GameCardType, GameLevel, GameResult } from '@/types/game';
-import { createGameCards, formatTime } from '@/utils/gameUtils';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Clock, RotateCcw, Home, Trophy } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+"use client";
+import { useState, useEffect, useCallback } from "react";
+import { GameCard } from "./GameCard";
+import { GameCard as GameCardType, GameLevel, GameResult } from "@/types/game";
+import { createGameCards, formatTime } from "@/utils/gameUtils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Clock, RotateCcw, Home, Trophy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface GameBoardProps {
   playerName: string;
@@ -15,7 +16,12 @@ interface GameBoardProps {
   onGoHome: () => void;
 }
 
-export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameBoardProps) {
+export default function GameBoard({
+  playerName,
+  level,
+  onGameComplete,
+  onGoHome,
+}: GameBoardProps) {
   const [cards, setCards] = useState<GameCardType[]>([]);
   const [flippedCards, setFlippedCards] = useState<GameCardType[]>([]);
   const [moves, setMoves] = useState(0);
@@ -24,118 +30,22 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
   const [isGameFinished, setIsGameFinished] = useState(false);
   const { toast } = useToast();
 
-  // Initialize game
-  useEffect(() => {
-    resetGame();
-  }, [level]);
-
-  // Timer
-  useEffect(() => {
-    if (!isGameStarted || isGameFinished) return;
-
-    const timer = setInterval(() => {
-      setTimeElapsed(prev => {
-        const newTime = prev + 1;
-        if (level.timeLimit && newTime >= level.timeLimit) {
-          handleGameOver('Hết thời gian! 🕐');
-          return prev;
-        }
-        return newTime;
+  // ==========================
+  // Callbacks
+  // ==========================
+  const handleGameOver = useCallback(
+    (message: string) => {
+      setIsGameFinished(true);
+      toast({
+        title: "Game Over!",
+        description: message,
+        variant: "destructive",
       });
-    }, 1000);
+    },
+    [toast]
+  );
 
-    return () => clearInterval(timer);
-  }, [isGameStarted, isGameFinished, level.timeLimit]);
-
-  // Check for game completion
-  useEffect(() => {
-    if (cards.length > 0 && cards.every(card => card.isMatched)) {
-      handleGameComplete();
-    }
-  }, [cards]);
-
-  const resetGame = () => {
-    const newCards = createGameCards(level);
-    setCards(newCards);
-    setFlippedCards([]);
-    setMoves(0);
-    setTimeElapsed(0);
-    setIsGameStarted(false);
-    setIsGameFinished(false);
-  };
-
-  const handleCardClick = useCallback((clickedCard: GameCardType) => {
-    if (!isGameStarted) setIsGameStarted(true);
-
-    if (flippedCards.length === 2) {
-      setCards(prev =>
-        prev.map(card =>
-          flippedCards.some(fc => fc.id === card.id) && !card.isMatched
-            ? { ...card, isFlipped: false }
-            : card
-        )
-      );
-      setFlippedCards([clickedCard]);
-      setCards(prev =>
-        prev.map(card =>
-          card.id === clickedCard.id ? { ...card, isFlipped: true } : card
-        )
-      );
-    } else {
-      setFlippedCards(prev => [...prev, clickedCard]);
-      setCards(prev =>
-        prev.map(card =>
-          card.id === clickedCard.id ? { ...card, isFlipped: true } : card
-        )
-      );
-    }
-
-    setMoves(prev => {
-      const newMoves = prev + 1;
-      if (level.moveLimit && newMoves >= level.moveLimit) {
-        setTimeout(() => handleGameOver('Hết lượt chơi! 🎯'), 100);
-      }
-      return newMoves;
-    });
-  }, [flippedCards, isGameStarted, level.moveLimit]);
-
-  // Check for matches
-  useEffect(() => {
-    if (flippedCards.length === 2) {
-      const [first, second] = flippedCards;
-      if (first.emoji === second.emoji) {
-        // Match found
-        setTimeout(() => {
-          setCards(prev =>
-            prev.map(card =>
-              card.id === first.id || card.id === second.id
-                ? { ...card, isMatched: true, isFlipped: true }
-                : card
-            )
-          );
-          setFlippedCards([]);
-          toast({
-            title: "Ghép thành công! 🎉",
-            description: "Bạn đã tìm thấy một cặp!",
-          });
-        }, 500);
-      } else {
-        // No match
-        setTimeout(() => {
-          setCards(prev =>
-            prev.map(card =>
-              card.id === first.id || card.id === second.id
-                ? { ...card, isFlipped: false }
-                : card
-            )
-          );
-          setFlippedCards([]);
-        }, 2000);
-      }
-    }
-  }, [flippedCards, toast]);
-
-  const handleGameComplete = () => {
+  const handleGameComplete = useCallback(() => {
     setIsGameFinished(true);
     const result: GameResult = {
       playerName,
@@ -151,34 +61,155 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
     });
 
     onGameComplete(result);
-  };
+  }, [playerName, level.name, moves, timeElapsed, toast, onGameComplete]);
 
-  const handleGameOver = (message: string) => {
-    setIsGameFinished(true);
-    toast({
-      title: "Game Over!",
-      description: message,
-      variant: "destructive",
-    });
-  };
+  const resetGame = useCallback(() => {
+    const newCards = createGameCards(level);
+    setCards(newCards);
+    setFlippedCards([]);
+    setMoves(0);
+    setTimeElapsed(0);
+    setIsGameStarted(false);
+    setIsGameFinished(false);
+  }, [level]);
 
+  const handleCardClick = useCallback(
+    (clickedCard: GameCardType) => {
+      if (!isGameStarted) setIsGameStarted(true);
+
+      if (flippedCards.length === 2) {
+        setCards((prev) =>
+          prev.map((card) =>
+            flippedCards.some((fc) => fc.id === card.id) && !card.isMatched
+              ? { ...card, isFlipped: false }
+              : card
+          )
+        );
+        setFlippedCards([clickedCard]);
+        setCards((prev) =>
+          prev.map((card) =>
+            card.id === clickedCard.id ? { ...card, isFlipped: true } : card
+          )
+        );
+      } else {
+        setFlippedCards((prev) => [...prev, clickedCard]);
+        setCards((prev) =>
+          prev.map((card) =>
+            card.id === clickedCard.id ? { ...card, isFlipped: true } : card
+          )
+        );
+      }
+
+      setMoves((prev) => {
+        const newMoves = prev + 1;
+        if (level.moveLimit && newMoves >= level.moveLimit) {
+          setTimeout(() => handleGameOver("Hết lượt chơi! 🎯"), 100);
+        }
+        return newMoves;
+      });
+    },
+    [flippedCards, isGameStarted, level.moveLimit, handleGameOver]
+  );
+
+  // ==========================
+  // Effects
+  // ==========================
+  useEffect(() => {
+    resetGame();
+  }, [resetGame]);
+
+  useEffect(() => {
+    if (!isGameStarted || isGameFinished) return;
+
+    const timer = setInterval(() => {
+      setTimeElapsed((prev) => {
+        const newTime = prev + 1;
+        if (level.timeLimit && newTime >= level.timeLimit) {
+          handleGameOver("Hết thời gian! 🕐");
+          return prev;
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isGameStarted, isGameFinished, level.timeLimit, handleGameOver]);
+
+  useEffect(() => {
+    if (cards.length > 0 && cards.every((card) => card.isMatched)) {
+      handleGameComplete();
+    }
+  }, [cards, handleGameComplete]);
+
+  useEffect(() => {
+    if (flippedCards.length === 2) {
+      const [first, second] = flippedCards;
+      if (first.emoji === second.emoji) {
+        // Match found
+        setTimeout(() => {
+          setCards((prev) =>
+            prev.map((card) =>
+              card.id === first.id || card.id === second.id
+                ? { ...card, isMatched: true, isFlipped: true }
+                : card
+            )
+          );
+          setFlippedCards([]);
+          toast({
+            title: "Ghép thành công! 🎉",
+            description: "Bạn đã tìm thấy một cặp!",
+          });
+        }, 500);
+      } else {
+        // No match
+        setTimeout(() => {
+          setCards((prev) =>
+            prev.map((card) =>
+              card.id === first.id || card.id === second.id
+                ? { ...card, isFlipped: false }
+                : card
+            )
+          );
+          setFlippedCards([]);
+        }, 2000);
+      }
+    }
+  }, [flippedCards, toast]);
+
+  // ==========================
+  // Render
+  // ==========================
   const timeRemaining = level.timeLimit ? level.timeLimit - timeElapsed : null;
   const movesRemaining = level.moveLimit ? level.moveLimit - moves : null;
 
   return (
-    <div className="min-h-screen bg-gradient-game p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen p-4">
+      <div className="max-w-4xl mx-auto rounded-lg shadow-xl p-4 bg-white">
         {/* Header */}
-        <Card className="mb-6 bg-game-card-back/80 backdrop-blur-sm">
+        <Card className="mb-6 game-card-bg-header border-none shadow-sm">
           <CardHeader className="pb-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-2xl font-bold text-white">
-                  {playerName} - Level {level.name}
+                <CardTitle className="text-2xl font-bold text-gray-800">
+                  <div>
+                    Người chơi: <span className="text-purple-600">{playerName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    Mức độ:
+                    <Badge
+                      variant="secondary"
+                      className="bg-purple-100 text-purple-700 border-purple-300 text-xl px-3 py-1"
+                    >
+                      {level.name}
+                    </Badge>
+                  </div>
                 </CardTitle>
                 <div className="flex gap-4 mt-2">
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1 bg-purple-100 text-purple-700 border-purple-300"
+                  >
+                    <Clock className="w-4 h-4 text-purple-600" />
                     {formatTime(timeElapsed)}
                     {timeRemaining !== null && (
                       <span className="text-red-500 ml-1">
@@ -186,22 +217,30 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
                       </span>
                     )}
                   </Badge>
-                  <Badge variant="outline">
+                  <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">
                     Nước đi: {moves}
                     {movesRemaining !== null && (
-                      <span className="text-red-500 ml-1">
-                        / {level.moveLimit}
-                      </span>
+                      <span className="text-red-500 ml-1">/ {level.moveLimit}</span>
                     )}
                   </Badge>
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={resetGame}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetGame}
+                  className="bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                >
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Chơi lại
                 </Button>
-                <Button variant="outline" size="sm" onClick={onGoHome}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onGoHome}
+                  className="bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                >
                   <Home className="w-4 h-4 mr-2" />
                   Về trang chủ
                 </Button>
@@ -211,7 +250,7 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
         </Card>
 
         {/* Game Grid */}
-        <Card className="bg-game-card-back/80 backdrop-blur-sm">
+        <Card className="game-card-bg-grid border-none shadow-sm">
           <CardContent className="p-6">
             <div
               className="grid gap-3 mx-auto"
@@ -226,26 +265,22 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
                   card={card}
                   onClick={() => handleCardClick(card)}
                   disabled={
-                    isGameFinished ||
-                    card.isFlipped ||
-                    card.isMatched ||
-                    flippedCards.length >= 2
+                    isGameFinished || card.isMatched || flippedCards.length >= 2
                   }
                 />
               ))}
             </div>
 
             {isGameFinished && (
-              <div className="text-center mt-6 p-4 bg-gradient-primary rounded-lg text-white">
+              <div className="text-center mt-6 p-4 game-result-gradient rounded-lg text-white">
                 <Trophy className="w-12 h-12 mx-auto mb-2" />
                 <h3 className="text-xl font-bold mb-2">
-                  {cards.every(card => card.isMatched) ? 'Chúc mừng!' : 'Game Over!'}
+                  {cards.every((card) => card.isMatched) ? "Chúc mừng!" : "Game Over!"}
                 </h3>
                 <p className="opacity-90">
-                  {cards.every(card => card.isMatched) 
+                  {cards.every((card) => card.isMatched)
                     ? `Bạn đã hoàn thành trong ${moves} nước và ${formatTime(timeElapsed)}!`
-                    : 'Hãy thử lại lần nữa!'
-                  }
+                    : "Hãy thử lại lần nữa!"}
                 </p>
               </div>
             )}
