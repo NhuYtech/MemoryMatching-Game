@@ -36,13 +36,10 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
     const timer = setInterval(() => {
       setTimeElapsed(prev => {
         const newTime = prev + 1;
-        
-        // Check time limit
         if (level.timeLimit && newTime >= level.timeLimit) {
           handleGameOver('Hết thời gian! 🕐');
           return prev;
         }
-        
         return newTime;
       });
     }, 1000);
@@ -69,33 +66,35 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
 
   const handleCardClick = useCallback((clickedCard: GameCardType) => {
     if (!isGameStarted) setIsGameStarted(true);
-    
+
     if (flippedCards.length === 2) {
-      // If two cards are already flipped, flip them back and start new flip
-      setCards(prev => prev.map(card => 
-        flippedCards.some(fc => fc.id === card.id) && !card.isMatched
-          ? { ...card, isFlipped: false }
-          : card
-      ));
+      setCards(prev =>
+        prev.map(card =>
+          flippedCards.some(fc => fc.id === card.id) && !card.isMatched
+            ? { ...card, isFlipped: false }
+            : card
+        )
+      );
       setFlippedCards([clickedCard]);
-      setCards(prev => prev.map(card => 
-        card.id === clickedCard.id ? { ...card, isFlipped: true } : card
-      ));
+      setCards(prev =>
+        prev.map(card =>
+          card.id === clickedCard.id ? { ...card, isFlipped: true } : card
+        )
+      );
     } else {
       setFlippedCards(prev => [...prev, clickedCard]);
-      setCards(prev => prev.map(card => 
-        card.id === clickedCard.id ? { ...card, isFlipped: true } : card
-      ));
+      setCards(prev =>
+        prev.map(card =>
+          card.id === clickedCard.id ? { ...card, isFlipped: true } : card
+        )
+      );
     }
-    
+
     setMoves(prev => {
       const newMoves = prev + 1;
-      
-      // Check move limit
       if (level.moveLimit && newMoves >= level.moveLimit) {
         setTimeout(() => handleGameOver('Hết lượt chơi! 🎯'), 100);
       }
-      
       return newMoves;
     });
   }, [flippedCards, isGameStarted, level.moveLimit]);
@@ -104,17 +103,17 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
   useEffect(() => {
     if (flippedCards.length === 2) {
       const [first, second] = flippedCards;
-      
       if (first.emoji === second.emoji) {
         // Match found
         setTimeout(() => {
-          setCards(prev => prev.map(card => 
-            card.id === first.id || card.id === second.id
-              ? { ...card, isMatched: true, isFlipped: true }
-              : card
-          ));
+          setCards(prev =>
+            prev.map(card =>
+              card.id === first.id || card.id === second.id
+                ? { ...card, isMatched: true, isFlipped: true }
+                : card
+            )
+          );
           setFlippedCards([]);
-          
           toast({
             title: "Ghép thành công! 🎉",
             description: "Bạn đã tìm thấy một cặp!",
@@ -123,11 +122,13 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
       } else {
         // No match
         setTimeout(() => {
-          setCards(prev => prev.map(card => 
-            card.id === first.id || card.id === second.id
-              ? { ...card, isFlipped: false }
-              : card
-          ));
+          setCards(prev =>
+            prev.map(card =>
+              card.id === first.id || card.id === second.id
+                ? { ...card, isFlipped: false }
+                : card
+            )
+          );
           setFlippedCards([]);
         }, 2000);
       }
@@ -143,12 +144,12 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
       duration: timeElapsed,
       createdAt: new Date(),
     };
-    
+
     toast({
       title: "Chúc mừng! 🏆",
       description: `Bạn đã hoàn thành game trong ${moves} nước và ${formatTime(timeElapsed)}!`,
     });
-    
+
     onGameComplete(result);
   };
 
@@ -168,11 +169,11 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
     <div className="min-h-screen bg-gradient-game p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <Card className="mb-6 bg-card/80 backdrop-blur-sm">
+        <Card className="mb-6 bg-game-card-back/80 backdrop-blur-sm">
           <CardHeader className="pb-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-2xl font-bold text-primary">
+                <CardTitle className="text-2xl font-bold text-white">
                   {playerName} - Level {level.name}
                 </CardTitle>
                 <div className="flex gap-4 mt-2">
@@ -180,7 +181,7 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
                     <Clock className="w-4 h-4" />
                     {formatTime(timeElapsed)}
                     {timeRemaining !== null && (
-                      <span className="text-destructive ml-1">
+                      <span className="text-red-500 ml-1">
                         / {formatTime(level.timeLimit!)}
                       </span>
                     )}
@@ -188,7 +189,7 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
                   <Badge variant="outline">
                     Nước đi: {moves}
                     {movesRemaining !== null && (
-                      <span className="text-destructive ml-1">
+                      <span className="text-red-500 ml-1">
                         / {level.moveLimit}
                       </span>
                     )}
@@ -210,9 +211,9 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
         </Card>
 
         {/* Game Grid */}
-        <Card className="bg-card/80 backdrop-blur-sm">
+        <Card className="bg-game-card-back/80 backdrop-blur-sm">
           <CardContent className="p-6">
-            <div 
+            <div
               className="grid gap-3 mx-auto"
               style={{
                 gridTemplateColumns: `repeat(${level.gridSize.cols}, 1fr)`,
@@ -233,9 +234,9 @@ export function GameBoard({ playerName, level, onGameComplete, onGoHome }: GameB
                 />
               ))}
             </div>
-            
+
             {isGameFinished && (
-              <div className="text-center mt-6 p-4 bg-gradient-primary rounded-lg text-primary-foreground">
+              <div className="text-center mt-6 p-4 bg-gradient-primary rounded-lg text-white">
                 <Trophy className="w-12 h-12 mx-auto mb-2" />
                 <h3 className="text-xl font-bold mb-2">
                   {cards.every(card => card.isMatched) ? 'Chúc mừng!' : 'Game Over!'}

@@ -8,6 +8,15 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Lovable base theme
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: "hsl(var(--primary))",
+        "primary-foreground": "hsl(var(--primary-foreground))",
+        card: "hsl(var(--card))",
+        "card-foreground": "hsl(var(--card-foreground))",
+
+        // Game-specific colors
         game: {
           board: "hsl(var(--game-board))",
           "card-back": "hsl(var(--card-back))",
@@ -49,5 +58,5 @@ export default {
       },
     },
   },
-  plugins: [], // Bỏ require("tailwindcss-animate")
-}
+  plugins: [],
+};

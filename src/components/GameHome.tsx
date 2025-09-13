@@ -1,3 +1,4 @@
+"use client";
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { GameLevel, GAME_LEVELS } from '@/types/game';
 import { Play, Trophy, Clock, Target, Zap } from 'lucide-react';
+
 
 interface GameHomeProps {
   onStartGame: (playerName: string, level: GameLevel) => void;
@@ -46,7 +48,7 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
         {/* Game Title */}
         <div className="text-center animate-fade-in">
           <h1 className="text-4xl font-bold text-primary mb-2">
-            🧠 Memory Game
+            🧠 Memory Matching Game
           </h1>
           <p className="text-muted-foreground">
             Thử thách trí nhớ của bạn!
