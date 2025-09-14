@@ -1,9 +1,9 @@
 {
   "name": "Memory Matching Game",
-  "slug": "memory-matching-game",
+  "slug": "memory-game-v2",
   "description": "Mini game trí nhớ vui nhộn, chơi nhanh trong Farcaster feed",
-  "icon": "/icon.png",
-  "splash": "/splash.png",
-  "og_image": "/og-image.png",
+  "icon": "https://memory-matching-game-self.vercel.app/icon.png",
+  "splash": "https://memory-matching-game-self.vercel.app/splash-new.png",
+  "og_image": "https://memory-matching-game-self.vercel.app/og-image.png",
   "platforms": ["farcaster"]
 }
