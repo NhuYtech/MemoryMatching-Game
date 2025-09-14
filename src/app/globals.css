@@ -135,3 +135,21 @@ body {
   color: hsl(330 100% 50%); /* hồng */
   font-weight: bold;
 }
+
+/* Custom button styles */
+.btn-replay {
+  @apply text-white bg-[#59c3f3] border-2 border-[#3b82f6] transition-all duration-300;
+}
+
+.btn-replay:hover {
+  background: linear-gradient(to right, #3b82f6, #0ea5e9);
+  border-color: #0ea5e9;
+}
+
+.btn-home {
+  @apply text-gray-700 border-2 border-gray-300 bg-white transition-all duration-300;
+}
+
+.btn-home:hover {
+  @apply bg-gray-100;
+}

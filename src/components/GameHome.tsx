@@ -47,9 +47,9 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
       <div className="max-w-md w-full space-y-6">
         {/* Game Title */}
         <div className="text-center animate-fade-in">
-          <h1 className="text-4xl font-bold text-primary mb-2">
-            🧠 Memory Matching Game
-          </h1>
+            <h1 className="text-4xl font-bold text-purple-600 mb-2">
+              🧠 Memory Matching Game
+            </h1>
           <p className="text-muted-foreground">
             Thử thách trí nhớ của bạn!
           </p>
@@ -58,7 +58,7 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
         {/* Player Setup */}
         <Card className="bg-card/80 backdrop-blur-sm animate-bounce-in">
           <CardHeader>
-            <CardTitle className="text-center text-primary">
+            <CardTitle className="text-center text-purple-600">
               Bắt đầu chơi
             </CardTitle>
           </CardHeader>
@@ -150,16 +150,17 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
 
         {/* Game Rules */}
         <Card className="bg-card/60 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-2 text-primary">Cách chơi:</h3>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Lật tối đa 2 thẻ mỗi lượt</li>
-              <li>• Tìm các cặp hình giống nhau</li>
-              <li>• Hoàn thành tất cả cặp để thắng</li>
-              <li>• Chú ý giới hạn thời gian và số lượt!</li>
-            </ul>
-          </CardContent>
-        </Card>
+        <CardContent className="p-4">
+          <h3 className="font-semibold mb-2 text-purple-600">Cách chơi:</h3>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            <li>• Lật tối đa 2 thẻ mỗi lượt</li>
+            <li>• Tìm các cặp hình giống nhau</li>
+            <li>• Hoàn thành tất cả cặp để thắng</li>
+            <li>• Chú ý giới hạn thời gian và số lượt!</li>
+          </ul>
+        </CardContent>
+      </Card>
+
       </div>
     </div>
   );

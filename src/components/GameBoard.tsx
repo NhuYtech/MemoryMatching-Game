@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, RotateCcw, Home, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { saveGameResult } from "@/lib/gameUtilsFirebase";
+import { saveGameResult } from "@/lib/gameResults";
+import { saveScore } from "@/lib/gameUtilsFirebase";
 
 interface GameBoardProps {
   playerName: string;
@@ -46,24 +47,28 @@ export default function GameBoard({
     [toast]
   );
 
-  const handleGameComplete = useCallback(() => {
-    setIsGameFinished(true);
-    const result: GameResult = {
-      playerName,
-      level: level.name,
-      moves,
-      duration: timeElapsed,
-      createdAt: new Date(),
-    };
+const handleGameComplete = useCallback(() => {
+  setIsGameFinished(true);
 
-    toast({
-      title: "Chúc mừng! 🏆",
-      description: `Bạn đã hoàn thành game trong ${moves} nước và ${formatTime(timeElapsed)}!`,
-    });
-    saveGameResult(result);
+  const result: GameResult = {
+    playerName,
+    level: level.name,
+    moves,
+    duration: timeElapsed,
+    createdAt: new Date(),
+    score: undefined
+  };
 
-    onGameComplete(result);
-  }, [playerName, level.name, moves, timeElapsed, toast, onGameComplete]);
+  toast({
+    title: "Chúc mừng! 🏆",
+    description: `Bạn đã hoàn thành game trong ${moves} nước và ${formatTime(timeElapsed)}!`,
+  });
+
+  saveGameResult(result);
+
+  onGameComplete(result);
+}, [playerName, level.name, moves, timeElapsed, toast, onGameComplete]);
+
 
   const resetGame = useCallback(() => {
     const newCards = createGameCards(level);
@@ -228,24 +233,24 @@ export default function GameBoard({
 
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={resetGame}
-                  className="bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Chơi lại
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onGoHome}
-                  className="bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                >
-                  <Home className="w-4 h-4 mr-2" />
-                  Về trang chủ
-                </Button>
+               <Button
+  variant="outline"
+  size="sm"
+  onClick={resetGame}
+  className="bg-gray-100 text-gray-700 border-gray-300 hover:bg-sky-500 hover:text-white hover:border-sky-500"
+>
+  <RotateCcw className="w-4 h-4 mr-2" />
+  Chơi lại
+</Button>
+<Button
+  variant="outline"
+  size="sm"
+  onClick={onGoHome}
+  className="bg-gray-100 text-gray-700 border-gray-300 hover:bg-sky-500 hover:text-white hover:border-sky-500"
+>
+  <Home className="w-4 h-4 mr-2" />
+  Về trang chủ
+</Button>
               </div>
             </div>
           </CardHeader>

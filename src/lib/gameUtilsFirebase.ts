@@ -1,11 +1,16 @@
-// src/lib/gameUtilsFirebase.ts
-import { db, auth } from "@/lib/firebase";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { GameResult } from "@/types/game";
+import { db } from "./firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { LeaderboardEntry } from "@/types/game";
 
-export async function saveGameResult(result: GameResult) {
-  await addDoc(collection(db, "gameResults"), {
-    ...result,
-    createdAt: serverTimestamp()
-  });
+export async function saveScore(entry: LeaderboardEntry) {
+  try {
+    await addDoc(collection(db, "leaderboard"), {
+      playerName: entry.playerName,
+      score: entry.score,
+      createdAt: serverTimestamp()
+    });
+    console.log("Score saved!");
+  } catch (err) {
+    console.error("Error saving score:", err);
+  }
 }

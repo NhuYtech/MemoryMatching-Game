@@ -59,11 +59,13 @@ export function MemoryGame() {
     case 'leaderboard':
       return (
         <Leaderboard
-          results={gameResults}
+          results={gameResults.map(result => ({
+            playerName: result.playerName,
+            score: result.score
+          }))}
           onBack={handleBackFromLeaderboard}
         />
-      );
-    
+      );    
     default:
       return null;
   }
