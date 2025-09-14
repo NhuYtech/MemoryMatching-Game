@@ -8,8 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, RotateCcw, Home, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { saveGameResult } from "@/lib/gameResults";
-
 interface GameBoardProps {
   playerName: string;
   level: GameLevel;
@@ -51,7 +49,7 @@ const handleGameComplete = useCallback(() => {
 
   const result: GameResult = {
     playerName,
-    level: level.name,
+    level: level.displayName,
     moves,
     duration: timeElapsed,
     createdAt: new Date(),
@@ -63,10 +61,9 @@ const handleGameComplete = useCallback(() => {
     description: `Bạn đã hoàn thành game trong ${moves} nước và ${formatTime(timeElapsed)}!`,
   });
 
-  saveGameResult(result);
 
   onGameComplete(result);
-}, [playerName, level.name, moves, timeElapsed, toast, onGameComplete]);
+}, [playerName, level.displayName, moves, timeElapsed, toast, onGameComplete]);
 
 
   const resetGame = useCallback(() => {
@@ -201,19 +198,19 @@ const handleGameComplete = useCallback(() => {
     Người chơi: <span className="text-purple-600">{playerName}</span>
   </div>
   <div className="flex items-center gap-2">
-    Mức độ: <span className="text-purple-600">{level.name}</span>
+    Mức độ: <span className="text-purple-600">{level.displayName}</span>
   </div>
 </CardTitle>
 
                <div className="flex gap-4 mt-2">
   <Badge
     variant="secondary"
-    className="flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300"
+    className="flex items-center gap-1 bg-green-100 text-green-800 border-green-300"
   >
-    <Clock className="w-4 h-4 text-yellow-600" />
+    <Clock className="w-4 h-4 text-green-600" />
     {formatTime(timeElapsed)}
     {timeRemaining !== null && (
-      <span className="text-red-500 ml-1">
+      <span className="text-green-500 ml-1">
         / {formatTime(level.timeLimit!)}
       </span>
     )}
@@ -221,11 +218,11 @@ const handleGameComplete = useCallback(() => {
 
   <Badge
     variant="outline"
-    className="bg-blue-100 text-blue-800 border-blue-300"
+    className="bg-yellow-100 text-yellow-800 border-yellow-300"
   >
     Nước đi: {moves}
     {movesRemaining !== null && (
-      <span className="text-red-500 ml-1">/ {level.moveLimit}</span>
+      <span className="text-yellow-500 ml-1">/ {level.moveLimit}</span>
     )}
   </Badge>
 </div>

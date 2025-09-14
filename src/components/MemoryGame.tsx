@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { GameHome } from './GameHome';
 import GameBoard from './GameBoard';
-import { Leaderboard } from './Leaderboard';
 import { GameLevel, GameResult } from '@/types/game';
 
-type GameScreen = 'home' | 'game' | 'leaderboard';
+type GameScreen = 'home' | 'game';
 
 export function MemoryGame() {
   const [currentScreen, setCurrentScreen] = useState<GameScreen>('home');
@@ -29,23 +28,12 @@ export function MemoryGame() {
     setSelectedLevel(null);
   };
 
-  const handleViewLeaderboard = () => {
-    setCurrentScreen('leaderboard');
-  };
-
-  const handleBackFromLeaderboard = () => {
-    setCurrentScreen('home');
-  };
-
   switch (currentScreen) {
     case 'home':
       return (
-        <GameHome
-          onStartGame={handleStartGame}
-          onViewLeaderboard={handleViewLeaderboard}
-        />
+        <GameHome onStartGame={handleStartGame} />
       );
-    
+
     case 'game':
       return selectedLevel ? (
         <GameBoard
@@ -56,16 +44,6 @@ export function MemoryGame() {
         />
       ) : null;
     
-    case 'leaderboard':
-      return (
-        <Leaderboard
-          results={gameResults.map(result => ({
-            playerName: result.playerName,
-            score: result.score
-          }))}
-          onBack={handleBackFromLeaderboard}
-        />
-      );    
     default:
       return null;
   }

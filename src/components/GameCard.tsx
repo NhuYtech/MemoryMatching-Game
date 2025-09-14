@@ -1,4 +1,4 @@
-  import { GameCard as GameCardType } from '@/types/game';
+import { GameCard as GameCardType } from '@/types/game';
   import { cn } from '@/lib/utils';
 
   interface GameCardProps {
@@ -18,11 +18,11 @@
           "aspect-square w-full relative rounded-lg transition-all duration-300",
           "transform hover:scale-105 active:scale-95",
           "shadow-lg hover:shadow-xl",
-          "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+          "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2",
           {
-            "bg-gradient-card border border-game-card-shadow": !isFlipped && !isMatched,
-            "bg-gradient-primary text-primary-foreground": isFlipped && !isMatched,
-            "bg-game-card-matched text-foreground animate-match-pulse": isMatched,
+            "bg-purple-100 border border-purple-300 text-purple-800": !isFlipped && !isMatched,
+            "bg-green-100 text-green-800 border-green-300": isFlipped && !isMatched,
+            "bg-yellow-100 text-yellow-800 border-yellow-300 animate-match-pulse": isMatched,
             "cursor-not-allowed opacity-50": disabled,
           }
         )}
@@ -36,7 +36,7 @@
               {emoji}
             </span>
           ) : (
-            <div className="w-8 h-8 bg-game-card-back rounded-full opacity-60" />
+            <div className="w-8 h-8 bg-purple-200 rounded-full opacity-60" />
           )}
         </div>
       </button>

@@ -13,15 +13,10 @@ export default function Home() {
     );
   };
 
-  const handleViewLeaderboard = () => {
-    router.push("/leaderboard");
-  };
-
   return (
     <main>
       <GameHome
-        onStartGame={handleStartGame}
-        onViewLeaderboard={handleViewLeaderboard}
+        onStartGame={handleStartGame} // chỉ còn prop này thôi
       />
     </main>
   );

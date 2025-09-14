@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export interface GameCard {
   id: string;
   emoji: string;
@@ -7,6 +9,7 @@ export interface GameCard {
 
 export interface GameLevel {
   name: 'Easy' | 'Medium' | 'Hard';
+  displayName: string;
   gridSize: { rows: number; cols: number };
   pairs: number;
   timeLimit?: number; // seconds
@@ -35,26 +38,12 @@ export interface GameResult {
 }
 
 export const GAME_LEVELS: GameLevel[] = [
-  {
-    name: 'Easy',
-    gridSize: { rows: 4, cols: 5 },
-    pairs: 10,
-  },
-  {
-    name: 'Medium',
-    gridSize: { rows: 6, cols: 6 },
-    pairs: 18,
-    timeLimit: 120,
-    moveLimit: 50,
-  },
-  {
-    name: 'Hard',
-    gridSize: { rows: 8, cols: 8 },
-    pairs: 32,
-    timeLimit: 180,
-    moveLimit: 70,
-  },
+  { name: 'Easy', displayName: 'Dễ', gridSize: { rows: 4, cols: 5 }, pairs: 10 },
+  { name: 'Medium', displayName: 'Trung bình', gridSize: { rows: 6, cols: 6 }, pairs: 18, timeLimit: 120, moveLimit: 50 },
+  { name: 'Hard', displayName: 'Khó', gridSize: { rows: 8, cols: 8 }, pairs: 32, timeLimit: 180, moveLimit: 70 },
 ];
+
+
 
 export const CARD_EMOJIS = [
   '🎯', '🎮', '🎲', '🎪', '🎨', '🎭', '🎬', '🎤', '🎧', '🎸',

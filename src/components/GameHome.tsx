@@ -11,10 +11,9 @@ import { Play, Trophy, Clock, Target, Zap } from 'lucide-react';
 
 interface GameHomeProps {
   onStartGame: (playerName: string, level: GameLevel) => void;
-  onViewLeaderboard: () => void;
 }
 
-export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
+export function GameHome({ onStartGame}: GameHomeProps) {
   const [playerName, setPlayerName] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<GameLevel>(GAME_LEVELS[0]);
 
@@ -24,20 +23,21 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
     }
   };
 
+  // Updated level colors to match the new design
   const getLevelColor = (levelName: string) => {
     switch (levelName) {
-      case 'Dễ': return 'level-badge-easy';
-      case 'Trung bình': return 'level-badge-medium';
-      case 'Khó': return 'level-badge-hard';
+      case 'Dễ': return 'bg-purple-100 text-purple-800 border-purple-300';
+      case 'Trung bình': return 'bg-green-100 text-green-800 border-green-300';
+      case 'Khó': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       default: return 'bg-gray-100 text-gray-800 border-gray-300';
     }
   };
 
   const getLevelIcon = (levelName: string) => {
     switch (levelName) {
-      case 'Dễ': return <Zap className="w-4 h-4" />;
-      case 'Trung bình': return <Target className="w-4 h-4" />;
-      case 'Khó': return <Trophy className="w-4 h-4" />;
+      case 'Dễ': return <Zap className="w-4 h-4 text-purple-600" />;
+      case 'Trung bình': return <Target className="w-4 h-4 text-green-600" />;
+      case 'Khó': return <Trophy className="w-4 h-4 text-yellow-600" />;
       default: return null;
     }
   };
@@ -95,8 +95,8 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
                         <span className="font-medium">{level.name}</span>
                       </div>
                       <div className="flex gap-1">
-                        <Badge 
-                          variant="outline" 
+                        <Badge
+                          variant="outline"
                           className={getLevelColor(level.name)}
                         >
                           {level.gridSize.rows}×{level.gridSize.cols}
@@ -134,17 +134,6 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
               <Play className="w-5 h-5 mr-2" />
               Bắt đầu chơi
             </Button>
-
-            {/* Leaderboard Button
-            <Button
-              onClick={onViewLeaderboard}
-              variant="outline"
-              className="btn-secondary"
-              size="lg"
-            >
-              <Trophy className="w-5 h-5 mr-2" />
-              Bảng xếp hạng
-            </Button> */}
           </CardContent>
         </Card>
 
