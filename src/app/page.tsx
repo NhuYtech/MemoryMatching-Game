@@ -16,7 +16,7 @@ export default function Home() {
   return (
     <main>
       <GameHome
-        onStartGame={handleStartGame} // chỉ còn prop này thôi
+        onStartGame={handleStartGame}
       />
     </main>
   );

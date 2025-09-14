@@ -44,27 +44,27 @@ export default function GameBoard({
     [toast]
   );
 
-const handleGameComplete = useCallback(() => {
-  setIsGameFinished(true);
+  const handleGameComplete = useCallback(() => {
+    setIsGameFinished(true);
 
-  const result: GameResult = {
-    playerName,
-    level: level.displayName,
-    moves,
-    duration: timeElapsed,
-    createdAt: new Date(),
-    score: undefined
-  };
+    const result: GameResult = {
+      playerName,
+      level: level.displayName,
+      moves,
+      duration: timeElapsed,
+      createdAt: new Date(),
+      score: undefined,
+    };
 
-  toast({
-    title: "Chúc mừng! 🏆",
-    description: `Bạn đã hoàn thành game trong ${moves} nước và ${formatTime(timeElapsed)}!`,
-  });
+    toast({
+      title: "Chúc mừng! 🏆",
+      description: `Bạn đã hoàn thành game trong ${moves} nước và ${formatTime(
+        timeElapsed
+      )}!`,
+    });
 
-
-  onGameComplete(result);
-}, [playerName, level.displayName, moves, timeElapsed, toast, onGameComplete]);
-
+    onGameComplete(result);
+  }, [playerName, level.displayName, moves, timeElapsed, toast, onGameComplete]);
 
   const resetGame = useCallback(() => {
     const newCards = createGameCards(level);
@@ -193,60 +193,61 @@ const handleGameComplete = useCallback(() => {
           <CardHeader className="pb-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-<CardTitle className="text-xl font-bold text-gray-800">
-  <div>
-    Người chơi: <span className="text-purple-600">{playerName}</span>
-  </div>
-  <div className="flex items-center gap-2">
-    Mức độ: <span className="text-purple-600">{level.displayName}</span>
-  </div>
-</CardTitle>
+                <CardTitle className="text-xl font-bold text-gray-800">
+                  <div>
+                    Người chơi:{" "}
+                    <span className="text-purple-600">{playerName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    Mức độ:{" "}
+                    <span className="text-purple-600">{level.displayName}</span>
+                  </div>
+                </CardTitle>
 
-               <div className="flex gap-4 mt-2">
-  <Badge
-    variant="secondary"
-    className="flex items-center gap-1 bg-green-100 text-green-800 border-green-300"
-  >
-    <Clock className="w-4 h-4 text-green-600" />
-    {formatTime(timeElapsed)}
-    {timeRemaining !== null && (
-      <span className="text-green-500 ml-1">
-        / {formatTime(level.timeLimit!)}
-      </span>
-    )}
-  </Badge>
+                <div className="flex gap-4 mt-2">
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1 bg-green-100 text-green-800 border-green-300"
+                  >
+                    <Clock className="w-4 h-4 text-green-600" />
+                    {formatTime(timeElapsed)}
+                    {timeRemaining !== null && (
+                      <span className="text-green-500 ml-1">
+                        / {formatTime(level.timeLimit!)}
+                      </span>
+                    )}
+                  </Badge>
 
-  <Badge
-    variant="outline"
-    className="bg-yellow-100 text-yellow-800 border-yellow-300"
-  >
-    Nước đi: {moves}
-    {movesRemaining !== null && (
-      <span className="text-yellow-500 ml-1">/ {level.moveLimit}</span>
-    )}
-  </Badge>
-</div>
-
+                  <Badge
+                    variant="outline"
+                    className="bg-yellow-100 text-yellow-800 border-yellow-300"
+                  >
+                    Nước đi: {moves}
+                    {movesRemaining !== null && (
+                      <span className="text-yellow-500 ml-1">/ {level.moveLimit}</span>
+                    )}
+                  </Badge>
+                </div>
               </div>
               <div className="flex gap-2">
-               <Button
-  variant="outline"
-  size="sm"
-  onClick={resetGame}
-  className="bg-gray-100 text-gray-700 border-gray-300 hover:bg-sky-500 hover:text-white hover:border-sky-500"
->
-  <RotateCcw className="w-4 h-4 mr-2" />
-  Chơi lại
-</Button>
-<Button
-  variant="outline"
-  size="sm"
-  onClick={onGoHome}
-  className="bg-gray-100 text-gray-700 border-gray-300 hover:bg-sky-500 hover:text-white hover:border-sky-500"
->
-  <Home className="w-4 h-4 mr-2" />
-  Về trang chủ
-</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetGame}
+                  className="bg-gray-100 text-gray-700 border-gray-300 hover:bg-sky-500 hover:text-white hover:border-sky-500"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Chơi lại
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onGoHome}
+                  className="bg-gray-100 text-gray-700 border-gray-300 hover:bg-sky-500 hover:text-white hover:border-sky-500"
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  Về trang chủ
+                </Button>
               </div>
             </div>
           </CardHeader>
