@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, RotateCcw, Home, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { saveGameResult } from "@/lib/gameUtilsFirebase";
 
 interface GameBoardProps {
   playerName: string;
@@ -59,6 +60,7 @@ export default function GameBoard({
       title: "Chúc mừng! 🏆",
       description: `Bạn đã hoàn thành game trong ${moves} nước và ${formatTime(timeElapsed)}!`,
     });
+    saveGameResult(result);
 
     onGameComplete(result);
   }, [playerName, level.name, moves, timeElapsed, toast, onGameComplete]);
@@ -190,40 +192,40 @@ export default function GameBoard({
           <CardHeader className="pb-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-2xl font-bold text-gray-800">
-                  <div>
-                    Người chơi: <span className="text-purple-600">{playerName}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    Mức độ:
-                    <Badge
-                      variant="secondary"
-                      className="bg-purple-100 text-purple-700 border-purple-300 text-xl px-3 py-1"
-                    >
-                      {level.name}
-                    </Badge>
-                  </div>
-                </CardTitle>
-                <div className="flex gap-4 mt-2">
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1 bg-purple-100 text-purple-700 border-purple-300"
-                  >
-                    <Clock className="w-4 h-4 text-purple-600" />
-                    {formatTime(timeElapsed)}
-                    {timeRemaining !== null && (
-                      <span className="text-red-500 ml-1">
-                        / {formatTime(level.timeLimit!)}
-                      </span>
-                    )}
-                  </Badge>
-                  <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">
-                    Nước đi: {moves}
-                    {movesRemaining !== null && (
-                      <span className="text-red-500 ml-1">/ {level.moveLimit}</span>
-                    )}
-                  </Badge>
-                </div>
+<CardTitle className="text-xl font-bold text-gray-800">
+  <div>
+    Người chơi: <span className="text-purple-600">{playerName}</span>
+  </div>
+  <div className="flex items-center gap-2">
+    Mức độ: <span className="text-purple-600">{level.name}</span>
+  </div>
+</CardTitle>
+
+               <div className="flex gap-4 mt-2">
+  <Badge
+    variant="secondary"
+    className="flex items-center gap-1 bg-yellow-100 text-yellow-800 border-yellow-300"
+  >
+    <Clock className="w-4 h-4 text-yellow-600" />
+    {formatTime(timeElapsed)}
+    {timeRemaining !== null && (
+      <span className="text-red-500 ml-1">
+        / {formatTime(level.timeLimit!)}
+      </span>
+    )}
+  </Badge>
+
+  <Badge
+    variant="outline"
+    className="bg-blue-100 text-blue-800 border-blue-300"
+  >
+    Nước đi: {moves}
+    {movesRemaining !== null && (
+      <span className="text-red-500 ml-1">/ {level.moveLimit}</span>
+    )}
+  </Badge>
+</div>
+
               </div>
               <div className="flex gap-2">
                 <Button

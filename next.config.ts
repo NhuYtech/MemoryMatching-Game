@@ -1,7 +1,10 @@
-import type { NextConfig } from "next";
+import { resolve } from "path";
 
-const nextConfig: NextConfig = {
-  /* config options here */
+const nextConfig = {
+  webpack(config: { resolve: { alias: { [x: string]: string; }; }; }) {
+    config.resolve.alias['@'] = resolve(__dirname, 'src');
+    return config;
+  },
 };
 
 export default nextConfig;

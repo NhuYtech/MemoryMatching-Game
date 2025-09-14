@@ -114,3 +114,24 @@ body {
 .animate-bounce-in {
   animation: bounce-in 0.5s ease-out;
 }
+
+/* Player info colors */
+.player-name { 
+  color: hsl(50 100% 50%); /* vàng */
+  font-weight: bold;
+}
+
+.game-level {
+  color: hsl(30 100% 50%); /* cam */
+  font-weight: bold;
+}
+
+.timer {
+  color: hsl(200 100% 50%); /* xanh dương */
+  font-weight: bold;
+}
+
+.moves {
+  color: hsl(330 100% 50%); /* hồng */
+  font-weight: bold;
+}
