@@ -135,7 +135,7 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
               Bắt đầu chơi
             </Button>
 
-            {/* Leaderboard Button */}
+            {/* Leaderboard Button
             <Button
               onClick={onViewLeaderboard}
               variant="outline"
@@ -144,7 +144,7 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
             >
               <Trophy className="w-5 h-5 mr-2" />
               Bảng xếp hạng
-            </Button>
+            </Button> */}
           </CardContent>
         </Card>
 

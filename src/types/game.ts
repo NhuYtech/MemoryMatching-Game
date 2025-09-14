@@ -66,11 +66,6 @@ export const CARD_EMOJIS = [
   '🥭', '🍉', '🫐', '🍈', '🥥', '🥕', '🌽', '🥒', '🥦', '🍄',
 ];
 
-// types/game.ts
-export interface LeaderboardEntry {
-  playerName: string;
-  score: number;
-}
 
 export interface GameResult {
   score: any;
