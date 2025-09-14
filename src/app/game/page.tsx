@@ -1,12 +1,13 @@
 "use client";
 
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import GameBoard from "@/components/GameBoard";
 import { GAME_LEVELS, type GameResult } from "@/types/game";
 
 function GameContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const playerName = searchParams?.get("player") || "Player1";
   const levelName = searchParams?.get("level") || "Easy";
@@ -19,7 +20,7 @@ function GameContent() {
   };
 
   const handleGoHome = () => {
-    // No redirection, keep the user on the same page
+    router.push("/"); // Redirect to the home page
   };
 
   return (
