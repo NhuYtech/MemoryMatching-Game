@@ -25,6 +25,7 @@ export interface GameState {
 }
 
 export interface GameResult {
+  score: any;
   playerName: string;
   level: string;
   moves: number;
@@ -69,4 +70,14 @@ export const CARD_EMOJIS = [
 export interface LeaderboardEntry {
   playerName: string;
   score: number;
+}
+
+export interface GameResult {
+  score: any;
+  playerName: string;
+  level: string;
+  moves: number;
+  duration: number;
+  createdAt: Date;
+  id?: string;
 }

@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, RotateCcw, Home, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { saveGameResult } from "@/lib/gameResults";
-import { saveScore } from "@/lib/gameUtilsFirebase";
 
 interface GameBoardProps {
   playerName: string;

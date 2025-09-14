@@ -26,18 +26,18 @@ export function GameHome({ onStartGame, onViewLeaderboard }: GameHomeProps) {
 
   const getLevelColor = (levelName: string) => {
     switch (levelName) {
-      case 'Easy': return 'level-badge-easy';
-      case 'Medium': return 'level-badge-medium';
-      case 'Hard': return 'level-badge-hard';
+      case 'Dễ': return 'level-badge-easy';
+      case 'Trung bình': return 'level-badge-medium';
+      case 'Khó': return 'level-badge-hard';
       default: return 'bg-gray-100 text-gray-800 border-gray-300';
     }
   };
 
   const getLevelIcon = (levelName: string) => {
     switch (levelName) {
-      case 'Easy': return <Zap className="w-4 h-4" />;
-      case 'Medium': return <Target className="w-4 h-4" />;
-      case 'Hard': return <Trophy className="w-4 h-4" />;
+      case 'Dễ': return <Zap className="w-4 h-4" />;
+      case 'Trung bình': return <Target className="w-4 h-4" />;
+      case 'Khó': return <Trophy className="w-4 h-4" />;
       default: return null;
     }
   };
