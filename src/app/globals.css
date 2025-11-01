@@ -115,6 +115,22 @@ body {
   animation: bounce-in 0.5s ease-out;
 }
 
+/* Animation cho card đã ghép thành công */
+@keyframes match-pulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+}
+
+.animate-match-pulse {
+  animation: match-pulse 2s ease-in-out infinite;
+}
+
 /* Player info colors */
 .player-name { 
   color: hsl(50 100% 50%); /* vàng */

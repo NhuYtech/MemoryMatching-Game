@@ -1,12 +1,26 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { GameLevel, GAME_LEVELS } from '@/types/game';
-import { Play, Trophy, Clock, Target, Zap } from 'lucide-react';
+import { Play, Trophy, Clock, Target, Zap, Wallet } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+// Declare window.ethereum type
+declare global {
+  interface Window {
+    ethereum?: {
+      isMetaMask?: boolean;
+      request: (args: { method: string; params?: unknown[] }) => Promise<string[]>;
+      selectedAddress: string | null;
+      on: (event: string, handler: (...args: unknown[]) => void) => void;
+      removeListener: (event: string, handler: (...args: unknown[]) => void) => void;
+    };
+  }
+}
 
 
 interface GameHomeProps {
@@ -16,11 +30,112 @@ interface GameHomeProps {
 export function GameHome({ onStartGame}: GameHomeProps) {
   const [playerName, setPlayerName] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<GameLevel>(GAME_LEVELS[0]);
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  
+  // 👉 THÊM Ở ĐÂY — ngay dưới các useState ở trên
+  const [showWalletPopup, setShowWalletPopup] = useState(false);
+
+  const handleWalletButtonClick = () => {
+    // Nếu chưa kết nối thì gọi connect
+    if (!isWalletConnected) {
+      handleConnectWallet();
+    } else {
+      // Nếu đã kết nối thì bật/tắt popup
+      setShowWalletPopup((prev) => !prev);
+    }
+  };
+
+  const disconnectWallet = () => {
+    setIsWalletConnected(false);
+    setWalletAddress(null);
+    setShowWalletPopup(false);
+    toast({
+      title: "Đã ngắt kết nối ví 🏷️",
+      description: "Bạn có thể kết nối lại bất cứ lúc nào.",
+    });
+  };
+  // 👆 THÊM 3 HÀM NÀY TRƯỚC handleConnectWallet
 
   const handleStartGame = () => {
     if (playerName.trim() && selectedLevel) {
       onStartGame(playerName.trim(), selectedLevel);
     }
+  };
+
+  // Check if wallet is already connected on mount
+  useEffect(() => {
+    const checkWalletConnection = () => {
+      if (window.ethereum?.selectedAddress) {
+        setIsWalletConnected(true);
+        setWalletAddress(window.ethereum.selectedAddress);
+      }
+    };
+
+    checkWalletConnection();
+
+    // Listen for account changes
+    if (window.ethereum) {
+      const handleAccountsChanged = (...args: unknown[]) => {
+        const accounts = args[0] as string[];
+        if (accounts && accounts.length > 0) {
+          setIsWalletConnected(true);
+          setWalletAddress(accounts[0]);
+        } else {
+          setIsWalletConnected(false);
+          setWalletAddress(null);
+        }
+      };
+
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+
+      return () => {
+        if (window.ethereum) {
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        }
+      };
+    }
+  }, []);
+
+  const handleConnectWallet = async () => {
+    if (!window.ethereum) {
+      toast({
+        title: "MetaMask không được tìm thấy",
+        description: "Vui lòng cài đặt MetaMask extension để kết nối ví.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Request account access
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts',
+      });
+
+      if (accounts && accounts.length > 0) {
+        setIsWalletConnected(true);
+        setWalletAddress(accounts[0]);
+        toast({
+          title: "Kết nối thành công! 🎉",
+          description: `Đã kết nối với địa chỉ: ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`,
+        });
+      }
+    } catch (error: unknown) {
+      console.error('Error connecting wallet:', error);
+      toast({
+        title: "Kết nối thất bại",
+        description: error instanceof Error ? error.message : "Không thể kết nối với MetaMask",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const formatAddress = (address: string | null) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   // Updated level colors to match the new design
@@ -43,7 +158,49 @@ export function GameHome({ onStartGame}: GameHomeProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-game flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-game flex items-center justify-center p-4 relative">
+      {/* Connect Wallet Button - Top Right */}
+      <div className="fixed top-4 right-4 z-50">
+  <div className="relative">
+    <Button
+      onClick={handleWalletButtonClick} // 👈 thay handleConnectWallet bằng hàm mới
+      variant={isWalletConnected ? "default" : "outline"}
+      className={`${
+        isWalletConnected
+          ? 'bg-green-600 hover:bg-green-700 text-white'
+          : 'border-2 border-purple-300 hover:border-purple-500 bg-white'
+      }`}
+      size="sm"
+    >
+      <Wallet className="w-4 h-4 mr-2" />
+      {isWalletConnected
+        ? (walletAddress ? formatAddress(walletAddress) : 'Đã kết nối')
+        : 'Connect Wallet'}
+    </Button>
+
+    {/* Popup hiển thị khi đã kết nối */}
+    {showWalletPopup && isWalletConnected && (
+      <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 animate-fade-in">
+        <p className="text-sm text-gray-700 mb-2">
+          <strong>Địa chỉ:</strong><br />
+          <span className="break-all text-gray-500">
+            {walletAddress}
+          </span>
+        </p>
+        <Button
+          onClick={disconnectWallet}
+          variant="destructive"
+          size="sm"
+          className="w-full"
+        >
+          Ngắt kết nối
+        </Button>
+      </div>
+    )}
+  </div>
+</div>
+
+
       <div className="max-w-md w-full space-y-6">
         {/* Game Title */}
         <div className="text-center animate-fade-in">

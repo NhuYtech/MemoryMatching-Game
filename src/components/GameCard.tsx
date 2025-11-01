@@ -22,7 +22,7 @@ import { GameCard as GameCardType } from '@/types/game';
           {
             "bg-purple-100 border border-purple-300 text-purple-800": !isFlipped && !isMatched,
             "bg-green-100 text-green-800 border-green-300": isFlipped && !isMatched,
-            "bg-yellow-100 text-yellow-800 border-yellow-300 animate-match-pulse": isMatched,
+            "bg-emerald-600 border-2 border-emerald-700 shadow-lg": isMatched,
             "cursor-not-allowed opacity-50": disabled,
           }
         )}
@@ -31,7 +31,7 @@ import { GameCard as GameCardType } from '@/types/game';
           {isFlipped || isMatched ? (
             <span className={cn(
               "text-2xl sm:text-3xl md:text-4xl font-bold",
-              "animate-bounce-in"
+              isMatched ? "filter drop-shadow-lg brightness-110" : "animate-bounce-in"
             )}>
               {emoji}
             </span>
