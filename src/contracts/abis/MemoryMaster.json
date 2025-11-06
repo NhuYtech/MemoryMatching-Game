@@ -1,0 +1,5 @@
+[
+  {"type":"function","name":"claimMaster","stateMutability":"nonpayable","inputs":[],"outputs":[]},
+  {"type":"event","name":"MasterMinted","inputs":[{"name":"to","type":"address","indexed":true},{"name":"tokenId","type":"uint256","indexed":false}],"anonymous":false}
+]
+

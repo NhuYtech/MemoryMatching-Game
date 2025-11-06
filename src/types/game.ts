@@ -28,13 +28,46 @@ export interface GameState {
 }
 
 export interface GameResult {
-  score: any;
+  score: number;
   playerName: string;
   level: string;
   moves: number;
   duration: number;
   createdAt: Date;
   id?: string;
+}
+
+export interface PvPStartEvent {
+  type: 'start';
+  roomId: string;
+  seed: number;
+  round: number; // 1..3 for BO3
+  startedAt: number; // epoch ms
+}
+
+export interface PvPMoveEvent {
+  type: 'move';
+  roomId: string;
+  round: number;
+  playerId: string;
+  atMs: number; // relative to start
+  cardId: string;
+}
+
+export interface PvPFinishEvent {
+  type: 'finish';
+  roomId: string;
+  round: number;
+  playerId: string;
+  durationMs: number;
+}
+
+export interface PvPWinnerEvent {
+  type: 'winner';
+  roomId: string;
+  bestOf: 3;
+  winnerId: string;
+  totals: Record<string, number>; // playerId -> cumulative ms
 }
 
 export const GAME_LEVELS: GameLevel[] = [
@@ -55,7 +88,7 @@ export const CARD_EMOJIS = [
 
 
 export interface GameResult {
-  score: any;
+  score: number;
   playerName: string;
   level: string;
   moves: number;

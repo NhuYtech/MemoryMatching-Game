@@ -1,0 +1,9 @@
+[
+  {"type":"function","name":"createMatch","stateMutability":"nonpayable","inputs":[{"name":"amount","type":"uint256"}],"outputs":[{"name":"matchId","type":"bytes32"}]},
+  {"type":"function","name":"joinMatch","stateMutability":"nonpayable","inputs":[{"name":"matchId","type":"bytes32"}],"outputs":[]},
+  {"type":"function","name":"resolve","stateMutability":"nonpayable","inputs":[{"name":"matchId","type":"bytes32"},{"name":"winner","type":"address"}],"outputs":[]},
+  {"type":"event","name":"MatchCreated","inputs":[{"name":"matchId","type":"bytes32","indexed":true},{"name":"creator","type":"address","indexed":true},{"name":"amount","type":"uint256","indexed":false}],"anonymous":false},
+  {"type":"event","name":"MatchJoined","inputs":[{"name":"matchId","type":"bytes32","indexed":true},{"name":"opponent","type":"address","indexed":true}],"anonymous":false},
+  {"type":"event","name":"MatchResolved","inputs":[{"name":"matchId","type":"bytes32","indexed":true},{"name":"winner","type":"address","indexed":true}],"anonymous":false}
+]
+

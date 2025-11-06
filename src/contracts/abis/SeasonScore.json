@@ -1,0 +1,20 @@
+[
+  {
+    "type": "function",
+    "name": "submit",
+    "stateMutability": "nonpayable",
+    "inputs": [{"name":"score","type":"uint256"}],
+    "outputs": []
+  },
+  {
+    "type": "event",
+    "name": "ScoreSubmitted",
+    "inputs": [
+      {"name":"player","type":"address","indexed":true},
+      {"name":"score","type":"uint256","indexed":false},
+      {"name":"season","type":"uint256","indexed":true}
+    ],
+    "anonymous": false
+  }
+]
+

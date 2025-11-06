@@ -5,9 +5,10 @@ import { GameCard as GameCardType } from '@/types/game';
     card: GameCardType;
     onClick: () => void;
     disabled?: boolean;
+    ghostFlipped?: boolean;
   }
 
-  export function GameCard({ card, onClick, disabled = false }: GameCardProps) {
+  export function GameCard({ card, onClick, disabled = false, ghostFlipped = false }: GameCardProps) {
     const { isFlipped, isMatched, emoji } = card;
 
     return (
@@ -39,6 +40,9 @@ import { GameCard as GameCardType } from '@/types/game';
             <div className="w-8 h-8 bg-purple-200 rounded-full opacity-60" />
           )}
         </div>
+        {ghostFlipped && !isFlipped && !isMatched && (
+          <div className="absolute inset-0 rounded-lg border-2 border-pink-400 pointer-events-none animate-pulse" />
+        )}
       </button>
     );
   }

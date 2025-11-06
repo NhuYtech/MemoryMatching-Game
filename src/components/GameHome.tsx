@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { GameLevel, GAME_LEVELS } from '@/types/game';
-import { Play, Trophy, Clock, Target, Zap, Wallet } from 'lucide-react';
+import { Play, Trophy, Clock, Target, Zap, Wallet, Swords } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Declare window.ethereum type
@@ -63,6 +63,10 @@ export function GameHome({ onStartGame}: GameHomeProps) {
     if (playerName.trim() && selectedLevel) {
       onStartGame(playerName.trim(), selectedLevel);
     }
+  };
+
+  const handleStartPvP = () => {
+    window.location.href = '/game/pvp';
   };
 
   // Check if wallet is already connected on mount
@@ -164,13 +168,11 @@ export function GameHome({ onStartGame}: GameHomeProps) {
   <div className="relative">
     <Button
       onClick={handleWalletButtonClick} // 👈 thay handleConnectWallet bằng hàm mới
-      variant={isWalletConnected ? "default" : "outline"}
-      className={`${
+      className={`h-9 px-3 ${
         isWalletConnected
           ? 'bg-green-600 hover:bg-green-700 text-white'
           : 'border-2 border-purple-300 hover:border-purple-500 bg-white'
       }`}
-      size="sm"
     >
       <Wallet className="w-4 h-4 mr-2" />
       {isWalletConnected
@@ -189,9 +191,7 @@ export function GameHome({ onStartGame}: GameHomeProps) {
         </p>
         <Button
           onClick={disconnectWallet}
-          variant="destructive"
-          size="sm"
-          className="w-full"
+          className="w-full h-9"
         >
           Ngắt kết nối
         </Button>
@@ -253,7 +253,6 @@ export function GameHome({ onStartGame}: GameHomeProps) {
                       </div>
                       <div className="flex gap-1">
                         <Badge
-                          variant="outline"
                           className={getLevelColor(level.name)}
                         >
                           {level.gridSize.rows}×{level.gridSize.cols}
@@ -285,11 +284,27 @@ export function GameHome({ onStartGame}: GameHomeProps) {
             <Button
               onClick={handleStartGame}
               disabled={!playerName.trim() || !selectedLevel}
-              className="btn-primary"
-              size="lg"
+              className="btn-primary h-11 px-8"
             >
               <Play className="w-5 h-5 mr-2" />
               Bắt đầu chơi
+            </Button>
+
+        <Button
+          onClick={handleStartPvP}
+          disabled={!playerName.trim()}
+          className="w-full mt-2 h-10 border border-purple-300 hover:bg-purple-50"
+        >
+          <Swords className="w-5 h-5 mr-2" />
+          1v1 Race (PvP)
+        </Button>
+
+            <Button
+              onClick={() => { window.location.href = '/leaderboard'; }}
+              className="w-full mt-2 h-10 border border-yellow-300 hover:bg-yellow-50"
+            >
+              <Trophy className="w-5 h-5 mr-2" />
+              Season Leaderboard
             </Button>
           </CardContent>
         </Card>
