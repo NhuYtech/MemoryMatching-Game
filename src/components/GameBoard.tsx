@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, RotateCcw, Home, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { submitSeasonScore, claimMasterNft } from "@/lib/onchain";
+import { useProgress } from "@/hooks/useProgress";
 
 interface GameBoardProps {
   playerName: string;
@@ -84,6 +85,9 @@ export default function GameBoard({
   const CLICK_DEBOUNCE_MS = 300; // Increased from 100ms for safety
   const { toast } = useToast();
 
+  // Progress tracking for rewards (only in Solo mode)
+  const { recordCompletion, isAllComplete } = useProgress(playerName);
+
   // ============================================================================
   // Game End Detection - Single Authoritative Function
   // ============================================================================
@@ -136,6 +140,7 @@ export default function GameBoard({
       createdAt: new Date(),
       score: finalScore,
       endReason,
+      mode: seed !== undefined ? 'pvp' : 'solo', // Determine mode
     };
 
     // Show appropriate toast
@@ -144,6 +149,29 @@ export default function GameBoard({
         title: "Chúc mừng! 🏆",
         description: message,
       });
+
+      // Record completion for reward tracking (async, non-blocking)
+      // Only for Solo mode (seed === undefined means not PvP)
+      if (seed === undefined) {
+        recordCompletion(level.name, {
+          moves,
+          duration: timeElapsed,
+          endReason,
+          mode: 'solo',
+        }).then((response) => {
+          if (response?.success && response?.recorded) {
+            // Check if all levels complete
+            if (isAllComplete) {
+              toast({
+                title: "All levels complete! 🎉",
+                description: "Connect wallet to claim your reward!",
+              });
+            }
+          }
+        }).catch((error) => {
+          console.error('[GameBoard] Failed to record completion:', error);
+        });
+      }
     } else {
       toast({
         title: "Game Over!",
@@ -154,7 +182,7 @@ export default function GameBoard({
 
     // Notify parent component
     onGameComplete(result);
-  }, [gameStatus, cards, moves, timeElapsed, isFrozen, level, mistakes, score, playerName, toast, onGameComplete]);
+  }, [gameStatus, cards, moves, timeElapsed, isFrozen, level, mistakes, score, playerName, toast, onGameComplete, seed, recordCompletion, isAllComplete]);
 
   // ============================================================================
   // Card Click Handler - With Race Condition Prevention

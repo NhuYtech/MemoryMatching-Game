@@ -74,6 +74,7 @@ export interface GameResult {
   createdAt: Date;
   id?: string;
   endReason?: GameEndReason;
+  mode?: GameMode; // Solo or PvP - only Solo counts for rewards
 }
 
 // ============================================================================

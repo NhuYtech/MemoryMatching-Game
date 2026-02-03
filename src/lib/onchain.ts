@@ -3,6 +3,7 @@ import MatchEscrowAbi from '@/contracts/abis/MatchEscrow.json';
 import MemoryMasterAbi from '@/contracts/abis/MemoryMaster.json';
 import { getContract, getRpcProvider, getSigner } from './ethers';
 import { ENV } from '@/env';
+import type { InterfaceAbi } from 'ethers';
 
 // ============================================================================
 // Contract Addresses
@@ -12,6 +13,7 @@ const ADDR = {
   SEASON_SCORE: ENV.SEASON_SCORE as string | undefined,
   MATCH_ESCROW: ENV.MATCH_ESCROW as string | undefined,
   MEMORY_MASTER: ENV.MEMORY_MASTER as string | undefined,
+  REWARD_CLAIM: ENV.REWARD_CLAIM as string | undefined,
 };
 
 // ============================================================================
@@ -194,6 +196,97 @@ export async function claimMasterNft() {
       throw new Error(error.reason || error.message);
     }
     throw error;
+  }
+}
+
+// ============================================================================
+// Reward Claim Contract
+// ============================================================================
+
+import RewardClaimAbi from '@/contracts/abis/RewardClaim.json';
+
+/**
+ * Claim achievement reward after completing all 3 levels
+ * @param season Season number
+ * @param nonce Unique nonce from server
+ * @param expiresAt Expiration timestamp
+ * @param signature Server signature
+ */
+export async function claimReward(
+  season: number,
+  nonce: string,
+  expiresAt: number,
+  signature: string
+) {
+  const address = validateContractAddress(ADDR.REWARD_CLAIM, 'REWARD_CLAIM');
+
+  const signer = await getSigner();
+  if (!signer) {
+    throw new Error('Wallet not connected');
+  }
+
+  const contract = getContract(address, RewardClaimAbi.abi as unknown as InterfaceAbi, signer);
+
+  try {
+    const tx = await (contract as unknown as {
+      claimReward: (
+        season: bigint,
+        nonce: string,
+        expiresAt: bigint,
+        signature: string
+      ) => Promise<{ wait: () => Promise<unknown> }>;
+    }).claimReward(BigInt(season), nonce, BigInt(expiresAt), signature);
+
+    return tx.wait();
+  } catch (error: unknown) {
+    if (isContractError(error)) {
+      // Handle specific contract errors
+      if (error.code === 'ACTION_REJECTED') {
+        throw new Error('Transaction rejected by user');
+      }
+
+      // Check for custom contract errors
+      if (error.message?.includes('AlreadyClaimed')) {
+        throw new Error('Reward already claimed for this season');
+      }
+      if (error.message?.includes('SignatureExpired')) {
+        throw new Error('Claim signature has expired. Please try again.');
+      }
+      if (error.message?.includes('InvalidSignature')) {
+        throw new Error('Invalid claim signature');
+      }
+      if (error.message?.includes('NonceAlreadyUsed')) {
+        throw new Error('This claim has already been processed');
+      }
+
+      throw new Error(error.reason || error.message);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Check if wallet has claimed reward for a season
+ */
+export async function hasClaimedReward(wallet: string, season: number): Promise<boolean> {
+  const address = validateContractAddress(ADDR.REWARD_CLAIM, 'REWARD_CLAIM');
+  const provider = getRpcProvider();
+
+  if (!provider) {
+    throw new Error('RPC provider not available');
+  }
+
+  const contract = getContract(address, RewardClaimAbi.abi as unknown as InterfaceAbi, provider);
+
+  try {
+    const claimed = await (contract as unknown as {
+      hasClaimedReward: (wallet: string, season: bigint) => Promise<boolean>;
+    }).hasClaimedReward(wallet, BigInt(season));
+
+    return claimed;
+  } catch (error) {
+    console.error('Error checking claim status:', error);
+    return false;
   }
 }
 
