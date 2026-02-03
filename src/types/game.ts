@@ -1,4 +1,35 @@
-import { ReactNode } from "react";
+// ============================================================================
+
+// ============================================================================
+// Game State Machine Types
+// ============================================================================
+
+/**
+ * Discriminated union for game status to ensure deterministic state transitions
+ * - idle: Game not started yet
+ * - playing: Game in progress
+ * - ended: Game finished (win or lose)
+ */
+export type GameStatus = 'idle' | 'playing' | 'ended';
+
+/**
+ * Game mode discriminator
+ */
+export type GameMode = 'solo' | 'pvp';
+
+/**
+ * Reason why the game ended (for analytics and UI feedback)
+ */
+export type GameEndReason =
+  | 'win'           // All cards matched
+  | 'time_limit'    // Time ran out
+  | 'move_limit'    // Moves exhausted
+  | 'mistake_limit' // Too many mistakes (sudden death)
+  | 'abandoned';    // User left/reset
+
+// ============================================================================
+// Core Game Types
+// ============================================================================
 
 export interface GameCard {
   id: string;
@@ -16,6 +47,10 @@ export interface GameLevel {
   moveLimit?: number;
 }
 
+/**
+ * Complete game state (deprecated - use individual state hooks instead)
+ * @deprecated Use individual useState hooks in components
+ */
 export interface GameState {
   cards: GameCard[];
   flippedCards: GameCard[];
@@ -27,6 +62,9 @@ export interface GameState {
   level: GameLevel;
 }
 
+/**
+ * Game result for leaderboard and analytics
+ */
 export interface GameResult {
   score: number;
   playerName: string;
@@ -35,7 +73,12 @@ export interface GameResult {
   duration: number;
   createdAt: Date;
   id?: string;
+  endReason?: GameEndReason;
 }
+
+// ============================================================================
+// PvP Event Types
+// ============================================================================
 
 export interface PvPStartEvent {
   type: 'start';
@@ -70,6 +113,10 @@ export interface PvPWinnerEvent {
   totals: Record<string, number>; // playerId -> cumulative ms
 }
 
+// ============================================================================
+// Constants
+// ============================================================================
+
 export const GAME_LEVELS: GameLevel[] = [
   { name: 'Dễ', displayName: 'Dễ', gridSize: { rows: 3, cols: 4 }, pairs: 6 },
   { name: 'Trung bình', displayName: 'Trung bình', gridSize: { rows: 4, cols: 4 }, pairs: 8, timeLimit: 120, moveLimit: 50 },
@@ -85,14 +132,3 @@ export const CARD_EMOJIS = [
   '🍎', '🍊', '🍋', '🍌', '🍇', '🍓', '🍑', '🍒', '🥝', '🍍',
   '🥭', '🍉', '🫐', '🍈', '🥥', '🥕', '🌽', '🥒', '🥦', '🍄',
 ];
-
-
-export interface GameResult {
-  score: number;
-  playerName: string;
-  level: string;
-  moves: number;
-  duration: number;
-  createdAt: Date;
-  id?: string;
-}

@@ -1,14 +1,22 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { GameCard } from "./GameCard";
-import { GameCard as GameCardType, GameLevel, GameResult } from "@/types/game";
-import { createGameCards, formatTime, calculateScore } from "@/utils/gameUtils";
+import { GameCard as GameCardType, GameLevel, GameResult, GameStatus, GameEndReason } from "@/types/game";
+import {
+  createGameCards,
+  formatTime,
+  calculateScore,
+  canFlipCard,
+  areAllCardsMatched,
+  validateGameState
+} from "@/utils/gameUtils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, RotateCcw, Home, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { submitSeasonScore, claimMasterNft } from "@/lib/onchain";
+
 interface GameBoardProps {
   playerName: string;
   level: GameLevel;
@@ -31,41 +39,94 @@ export default function GameBoard({
   onCardEvent,
   ghostFlippedIds,
 }: GameBoardProps) {
+  // ============================================================================
+  // State Machine - Single Source of Truth
+  // ============================================================================
+  const [gameStatus, setGameStatus] = useState<GameStatus>('idle');
   const [cards, setCards] = useState<GameCardType[]>([]);
   const [flippedCards, setFlippedCards] = useState<GameCardType[]>([]);
   const [moves, setMoves] = useState(0);
   const [timeElapsed, setTimeElapsed] = useState(0);
-  const [isGameStarted, setIsGameStarted] = useState(false);
-  const [isGameFinished, setIsGameFinished] = useState(false);
-  const [lastClickAt, setLastClickAt] = useState<number>(0);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
   const [mistakes, setMistakes] = useState(0);
+
+  // ============================================================================
+  // Processing Flags - Prevent Race Conditions
+  // ============================================================================
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isPeeking, setIsPeeking] = useState(false);
   const [isFrozen, setIsFrozen] = useState(false);
+
+  // ============================================================================
+  // Power-up State
+  // ============================================================================
   const [freezeUses, setFreezeUses] = useState(1);
   const [peekUses, setPeekUses] = useState(1);
-  const [isPeeking, setIsPeeking] = useState(false);
+
+  // ============================================================================
+  // Web3 State
+  // ============================================================================
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ============================================================================
+  // Refs - Prevent Duplicate Callbacks
+  // ============================================================================
+  const gameEndFiredRef = useRef(false);
+  const lastClickTimeRef = useRef(0);
+  const hasSubmittedScoreRef = useRef(false);
+
+  // ============================================================================
+  // Constants
+  // ============================================================================
   const suddenDeathLimit = 3;
+  const CLICK_DEBOUNCE_MS = 300; // Increased from 100ms for safety
   const { toast } = useToast();
 
-  // ==========================
-  // Callbacks
-  // ==========================
-  const handleGameOver = useCallback(
-    (message: string) => {
-      setIsGameFinished(true);
-      toast({
-        title: "Game Over!",
-        description: message,
-        variant: "destructive",
-      });
-    },
-    [toast]
-  );
+  // ============================================================================
+  // Game End Detection - Single Authoritative Function
+  // ============================================================================
+  const checkAndHandleGameEnd = useCallback(() => {
+    // Guard: Only check if game is playing
+    if (gameStatus !== 'playing') return;
 
-  const handleGameComplete = useCallback(() => {
-    setIsGameFinished(true);
+    // Guard: Prevent duplicate game end triggers
+    if (gameEndFiredRef.current) return;
+
+    let endReason: GameEndReason | null = null;
+    let message = '';
+
+    // Check win condition
+    if (areAllCardsMatched(cards)) {
+      endReason = 'win';
+      message = `Chúc mừng! Bạn đã hoàn thành trong ${moves} nước và ${formatTime(timeElapsed)}!`;
+    }
+    // Check time limit
+    else if (!isFrozen && level.timeLimit && timeElapsed >= level.timeLimit) {
+      endReason = 'time_limit';
+      message = 'Hết thời gian! 🕐';
+    }
+    // Check move limit
+    else if (level.moveLimit && moves >= level.moveLimit) {
+      endReason = 'move_limit';
+      message = 'Hết lượt chơi! 🎯';
+    }
+    // Check mistake limit (sudden death)
+    else if (mistakes >= suddenDeathLimit) {
+      endReason = 'mistake_limit';
+      message = 'Quá số lần sai! ☠️';
+    }
+
+    // If no end condition met, return
+    if (!endReason) return;
+
+    // Mark game as ended
+    gameEndFiredRef.current = true;
+    setGameStatus('ended');
+
+    // Calculate final score
+    const finalScore = calculateScore(moves, timeElapsed) + score;
 
     const result: GameResult = {
       playerName,
@@ -73,50 +134,62 @@ export default function GameBoard({
       moves,
       duration: timeElapsed,
       createdAt: new Date(),
-      score: calculateScore(moves, timeElapsed) + score,
+      score: finalScore,
+      endReason,
     };
 
-    toast({
-      title: "Chúc mừng! 🏆",
-      description: `Bạn đã hoàn thành game trong ${moves} nước và ${formatTime(
-        timeElapsed
-      )}!`,
-    });
+    // Show appropriate toast
+    if (endReason === 'win') {
+      toast({
+        title: "Chúc mừng! 🏆",
+        description: message,
+      });
+    } else {
+      toast({
+        title: "Game Over!",
+        description: message,
+        variant: "destructive",
+      });
+    }
 
+    // Notify parent component
     onGameComplete(result);
-  }, [playerName, level.displayName, moves, timeElapsed, toast, onGameComplete]);
+  }, [gameStatus, cards, moves, timeElapsed, isFrozen, level, mistakes, score, playerName, toast, onGameComplete]);
 
-  const resetGame = useCallback(() => {
-    const newCards = createGameCards(level, seed);
-    setCards(newCards);
-    setFlippedCards([]);
-    setMoves(0);
-    setTimeElapsed(0);
-    setIsGameStarted(false);
-    setIsGameFinished(false);
-    setScore(0);
-    setCombo(0);
-    setMaxCombo(0);
-    setMistakes(0);
-    setIsFrozen(false);
-    setPeekUses(1);
-    setFreezeUses(1);
-    setIsPeeking(false);
-  }, [level, seed]);
-
+  // ============================================================================
+  // Card Click Handler - With Race Condition Prevention
+  // ============================================================================
   const handleCardClick = useCallback(
     (clickedCard: GameCardType) => {
       const now = Date.now();
-      if (now - lastClickAt < 100) return; // Rate-limit to >= 100ms
-      setLastClickAt(now);
-      if (!isGameStarted) setIsGameStarted(true);
-      if (isPeeking || isGameFinished) return;
 
+      // Rate limiting - prevent spam clicks
+      if (now - lastClickTimeRef.current < CLICK_DEBOUNCE_MS) {
+        return;
+      }
+      lastClickTimeRef.current = now;
+
+      // Start game on first click
+      if (gameStatus === 'idle') {
+        setGameStatus('playing');
+      }
+
+      // Guard: Use centralized validation
+      if (!canFlipCard(clickedCard, gameStatus, isProcessing, isPeeking, flippedCards.length)) {
+        return;
+      }
+
+      // Notify PvP if applicable
       if (onCardEvent) {
         onCardEvent({ cardId: clickedCard.id, atMs: timeElapsed * 1000 });
       }
 
+      // Set processing flag to prevent rapid clicks
+      setIsProcessing(true);
+
+      // Handle flip logic
       if (flippedCards.length === 2) {
+        // Reset previously flipped cards
         setCards((prev) =>
           prev.map((card) =>
             flippedCards.some((fc) => fc.id === card.id) && !card.isMatched
@@ -131,6 +204,7 @@ export default function GameBoard({
           )
         );
       } else {
+        // Flip the clicked card
         setFlippedCards((prev) => [...prev, clickedCard]);
         setCards((prev) =>
           prev.map((card) =>
@@ -139,138 +213,220 @@ export default function GameBoard({
         );
       }
 
-      setMoves((prev) => {
-        const newMoves = prev + 1;
-        if (level.moveLimit && newMoves >= level.moveLimit) {
-          setTimeout(() => handleGameOver("Hết lượt chơi! 🎯"), 100);
-        }
-        return newMoves;
-      });
+      // Increment moves
+      setMoves((prev) => prev + 1);
+
+      // Release processing flag after state updates
+      setTimeout(() => setIsProcessing(false), 100);
     },
-    [flippedCards, isGameStarted, isPeeking, isGameFinished, level.moveLimit, handleGameOver, onCardEvent, timeElapsed, lastClickAt]
+    [gameStatus, flippedCards, isProcessing, isPeeking, onCardEvent, timeElapsed]
   );
 
-  // ==========================
-  // Effects
-  // ==========================
+  // ============================================================================
+  // Match Detection Effect
+  // ============================================================================
+  useEffect(() => {
+    if (gameStatus !== 'playing') return;
+    if (flippedCards.length !== 2) return;
+
+    const [first, second] = flippedCards;
+
+    if (first.emoji === second.emoji) {
+      // Match found
+      const matchTimeout = setTimeout(() => {
+        setCards((prev) =>
+          prev.map((card) =>
+            card.id === first.id || card.id === second.id
+              ? { ...card, isMatched: true, isFlipped: true }
+              : card
+          )
+        );
+        setFlippedCards([]);
+        setCombo((prev) => {
+          const nextCombo = prev + 1;
+          setMaxCombo((max) => Math.max(max, nextCombo));
+          // Multiplier grows with combo (20% per step), capped at 3x
+          const multiplier = Math.min(1 + nextCombo * 0.2, 3);
+          setScore((s) => s + Math.round(1000 * multiplier));
+          return nextCombo;
+        });
+      }, 500);
+
+      return () => clearTimeout(matchTimeout);
+    } else {
+      // No match
+      const noMatchTimeout = setTimeout(() => {
+        setCards((prev) =>
+          prev.map((card) =>
+            card.id === first.id || card.id === second.id
+              ? { ...card, isFlipped: false }
+              : card
+          )
+        );
+        setFlippedCards([]);
+        setCombo(0);
+        setMistakes((m) => m + 1);
+      }, 2000);
+
+      return () => clearTimeout(noMatchTimeout);
+    }
+  }, [flippedCards, gameStatus]);
+
+  // ============================================================================
+  // Game Timer Effect
+  // ============================================================================
+  useEffect(() => {
+    if (gameStatus !== 'playing') return;
+
+    const timer = setInterval(() => {
+      setTimeElapsed((prev) => (isFrozen ? prev : prev + 1));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [gameStatus, isFrozen]);
+
+  // ============================================================================
+  // Game End Detection Effect
+  // ============================================================================
+  useEffect(() => {
+    checkAndHandleGameEnd();
+  }, [checkAndHandleGameEnd, cards, moves, timeElapsed, mistakes]);
+
+  // ============================================================================
+  // External Start Signal (PvP)
+  // ============================================================================
+  useEffect(() => {
+    if (startSignal && gameStatus === 'idle') {
+      setGameStatus('playing');
+    }
+  }, [startSignal, gameStatus]);
+
+  // ============================================================================
+  // Reset Game Function
+  // ============================================================================
+  const resetGame = useCallback(() => {
+    const newCards = createGameCards(level, seed);
+    setCards(newCards);
+    setFlippedCards([]);
+    setMoves(0);
+    setTimeElapsed(0);
+    setGameStatus('idle');
+    setScore(0);
+    setCombo(0);
+    setMaxCombo(0);
+    setMistakes(0);
+    setIsFrozen(false);
+    setPeekUses(1);
+    setFreezeUses(1);
+    setIsPeeking(false);
+    setIsProcessing(false);
+    gameEndFiredRef.current = false;
+    hasSubmittedScoreRef.current = false;
+  }, [level, seed]);
+
+  // ============================================================================
+  // Initialize Game
+  // ============================================================================
   useEffect(() => {
     resetGame();
   }, [resetGame]);
 
-  // External start signal support
-  useEffect(() => {
-    if (startSignal && !isGameStarted && !isGameFinished) {
-      setIsGameStarted(true);
-    }
-  }, [startSignal, isGameStarted, isGameFinished]);
-
-  useEffect(() => {
-    if (!isGameStarted || isGameFinished) return;
-
-    const timer = setInterval(() => {
-      setTimeElapsed((prev) => {
-        const newTime = prev + 1;
-        if (!isFrozen && level.timeLimit && newTime >= level.timeLimit) {
-          handleGameOver("Hết thời gian! 🕐");
-          return prev;
-        }
-        return isFrozen ? prev : newTime;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isGameStarted, isGameFinished, isFrozen, level.timeLimit, handleGameOver]);
-
-  useEffect(() => {
-    if (cards.length > 0 && cards.every((card) => card.isMatched)) {
-      handleGameComplete();
-    }
-  }, [cards, handleGameComplete]);
-
-  useEffect(() => {
-    if (flippedCards.length === 2) {
-      const [first, second] = flippedCards;
-      if (first.emoji === second.emoji) {
-        // Match found
-        setTimeout(() => {
-          setCards((prev) =>
-            prev.map((card) =>
-              card.id === first.id || card.id === second.id
-                ? { ...card, isMatched: true, isFlipped: true }
-                : card
-            )
-          );
-          setFlippedCards([]);
-          setCombo((prev) => {
-            const nextCombo = prev + 1;
-            setMaxCombo((max) => Math.max(max, nextCombo));
-            // Multiplier grows with combo (20% per step), capped at 3x
-            const multiplier = Math.min(1 + nextCombo * 0.2, 3);
-            setScore((s) => s + Math.round(1000 * multiplier));
-            return nextCombo;
-          });
-          toast({
-            title: "Ghép thành công! 🎉",
-            description: "Bạn đã tìm thấy một cặp!",
-          });
-        }, 500);
-      } else {
-        // No match
-        setTimeout(() => {
-          setCards((prev) =>
-            prev.map((card) =>
-              card.id === first.id || card.id === second.id
-                ? { ...card, isFlipped: false }
-                : card
-            )
-          );
-          setFlippedCards([]);
-          setCombo(0);
-          setMistakes((m) => {
-            const next = m + 1;
-            if (next > suddenDeathLimit) {
-              handleGameOver("Quá số lần sai! ☠️");
-            }
-            return next;
-          });
-        }, 2000);
-      }
-    }
-  }, [flippedCards, toast, handleGameOver]);
-
-  // ==========================
+  // ============================================================================
   // Power-ups
-  // ==========================
+  // ============================================================================
   const activatePeek = useCallback(() => {
-    if (isGameFinished || peekUses <= 0 || isPeeking) return;
+    if (gameStatus !== 'playing' || peekUses <= 0 || isPeeking) return;
+
     setPeekUses((u) => u - 1);
     setIsPeeking(true);
+
     // Reveal all non-matched cards
     setCards((prev) => prev.map((c) => (c.isMatched ? c : { ...c, isFlipped: true })));
+
     const revealDurationMs = 1500;
-    setTimeout(() => {
+    const peekTimeout = setTimeout(() => {
       setCards((prev) =>
         prev.map((c) => (c.isMatched ? c : { ...c, isFlipped: false }))
       );
       setIsPeeking(false);
     }, revealDurationMs);
-  }, [isGameFinished, peekUses, isPeeking]);
+
+    return () => clearTimeout(peekTimeout);
+  }, [gameStatus, peekUses, isPeeking]);
 
   const activateFreeze = useCallback(() => {
-    if (isGameFinished || freezeUses <= 0 || isFrozen) return;
+    if (gameStatus !== 'playing' || freezeUses <= 0 || isFrozen) return;
+
     setFreezeUses((u) => u - 1);
     setIsFrozen(true);
-    const freezeMs = 5000;
-    setTimeout(() => setIsFrozen(false), freezeMs);
-  }, [isGameFinished, freezeUses, isFrozen]);
 
-  // ==========================
-  // Render
-  // ==========================
+    const freezeMs = 5000;
+    const freezeTimeout = setTimeout(() => setIsFrozen(false), freezeMs);
+
+    return () => clearTimeout(freezeTimeout);
+  }, [gameStatus, freezeUses, isFrozen]);
+
+  // ============================================================================
+  // Web3 Handlers
+  // ============================================================================
+  const handleSubmitScore = async () => {
+    if (hasSubmittedScoreRef.current || isSubmitting) return;
+
+    hasSubmittedScoreRef.current = true;
+    setIsSubmitting(true);
+
+    try {
+      const finalScore = calculateScore(moves, timeElapsed) + score;
+      await submitSeasonScore(finalScore);
+      toast({
+        title: "Đã submit điểm on-chain",
+        description: `Score: ${finalScore}`
+      });
+    } catch (e: unknown) {
+      const error = e as Error;
+      toast({
+        title: "Submit thất bại",
+        description: error?.message ?? String(e),
+        variant: "destructive"
+      });
+      // Allow retry on failure
+      hasSubmittedScoreRef.current = false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClaimNFT = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await claimMasterNft();
+      toast({ title: "Mint NFT yêu cầu gửi!" });
+    } catch (e: unknown) {
+      const error = e as Error;
+      toast({
+        title: "Mint thất bại",
+        description: error?.message ?? String(e),
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ============================================================================
+  // Render Helpers
+  // ============================================================================
   const timeRemaining = level.timeLimit ? level.timeLimit - timeElapsed : null;
   const movesRemaining = level.moveLimit ? level.moveLimit - moves : null;
   const suddenDeathRemaining = suddenDeathLimit - mistakes;
+  const isGameWon = gameStatus === 'ended' && areAllCardsMatched(cards);
 
+  // ============================================================================
+  // Render
+  // ============================================================================
   return (
     <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto rounded-lg shadow-xl p-4 bg-white">
@@ -323,21 +479,19 @@ export default function GameBoard({
                 </Button>
                 <Button
                   onClick={activatePeek}
-                  disabled={peekUses <= 0 || isPeeking || isGameFinished}
+                  disabled={peekUses <= 0 || isPeeking || gameStatus !== 'playing'}
                   className="h-9 px-3 bg-purple-100 text-purple-700 border border-purple-300 hover:bg-purple-500 hover:text-white hover:border-purple-500 disabled:opacity-50"
                 >
                   Peek ({peekUses})
                 </Button>
                 <Button
-                  
                   onClick={activateFreeze}
-                  disabled={freezeUses <= 0 || isFrozen || isGameFinished}
+                  disabled={freezeUses <= 0 || isFrozen || gameStatus !== 'playing'}
                   className="h-9 px-3 bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-500 hover:text-white hover:border-blue-500 disabled:opacity-50"
                 >
                   Freeze {isFrozen ? '(On)' : `(${freezeUses})`}
                 </Button>
                 <Button
-                  
                   onClick={onGoHome}
                   className="h-9 px-3 bg-gray-100 text-gray-700 border border-gray-300 hover:bg-sky-500 hover:text-white hover:border-sky-500"
                 >
@@ -382,52 +536,38 @@ export default function GameBoard({
                   card={card}
                   onClick={() => handleCardClick(card)}
                   disabled={
-                    isGameFinished || isPeeking || card.isMatched || flippedCards.length >= 2
+                    gameStatus === 'ended' || isPeeking || card.isMatched || flippedCards.length >= 2
                   }
                   ghostFlipped={ghostFlippedIds?.has(card.id)}
                 />
               ))}
             </div>
 
-            {isGameFinished && (
+            {gameStatus === 'ended' && (
               <div className="text-center mt-6 p-4 game-result-gradient rounded-lg text-white">
                 <Trophy className="w-12 h-12 mx-auto mb-2" />
                 <h3 className="text-xl font-bold mb-2">
-                  {cards.every((card) => card.isMatched) ? "Chúc mừng!" : "Game Over!"}
+                  {isGameWon ? "Chúc mừng!" : "Game Over!"}
                 </h3>
                 <p className="opacity-90">
-                  {cards.every((card) => card.isMatched)
+                  {isGameWon
                     ? `Bạn đã hoàn thành trong ${moves} nước và ${formatTime(timeElapsed)}!`
                     : "Hãy thử lại lần nữa!"}
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
                   <Button
-                    onClick={async () => {
-                      try {
-                        const finalScore = calculateScore(moves, timeElapsed) + score;
-                        await submitSeasonScore(finalScore);
-                        toast({ title: "Đã submit điểm on-chain", description: `Score: ${finalScore}` });
-                      } catch (e: any) {
-                        toast({ title: "Submit thất bại", description: e?.message ?? String(e), variant: "destructive" });
-                      }
-                    }}
+                    onClick={handleSubmitScore}
+                    disabled={isSubmitting || hasSubmittedScoreRef.current}
                     className="h-9 px-3"
                   >
-                    Submit on-chain
+                    {isSubmitting ? 'Đang gửi...' : 'Submit on-chain'}
                   </Button>
                   <Button
-                    
-                    onClick={async () => {
-                      try {
-                        await claimMasterNft();
-                        toast({ title: "Mint NFT yêu cầu gửi!" });
-                      } catch (e: any) {
-                        toast({ title: "Mint thất bại", description: e?.message ?? String(e), variant: "destructive" });
-                      }
-                    }}
+                    onClick={handleClaimNFT}
+                    disabled={isSubmitting}
                     className="h-9 px-3"
                   >
-                    Claim NFT
+                    {isSubmitting ? 'Đang xử lý...' : 'Claim NFT'}
                   </Button>
                 </div>
               </div>

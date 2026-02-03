@@ -11,7 +11,7 @@ function PvPContent() {
 
   const playerName = searchParams?.get("player") || "Player";
   const levelName = searchParams?.get("level") || "Trung bình";
-  const level = GAME_LEVELS.find(l => l.name === (levelName as any)) || GAME_LEVELS[1];
+  const level = GAME_LEVELS.find(l => l.name === levelName) || GAME_LEVELS[1];
   const playerId = searchParams?.get("pid") || Math.random().toString(36).slice(2, 10);
 
   return (

@@ -39,25 +39,29 @@ export default function PvPMatch({ playerId, playerName, level = GAME_LEVELS[1] 
       return;
     }
     const channel = realtime.subscribe(`room-${id}`, {
-      start: (data: PvPStartEvent) => {
-        setSeed(data.seed);
-        setRound(data.round);
-        setStartSignal(data.startedAt);
-        toast({ title: `Bắt đầu Round ${data.round}`, description: `Seed ${data.seed}` });
+      start: (data) => {
+        const startData = data as unknown as PvPStartEvent;
+        setSeed(startData.seed);
+        setRound(startData.round);
+        setStartSignal(startData.startedAt);
+        toast({ title: `Bắt đầu Round ${startData.round}`, description: `Seed ${startData.seed}` });
       },
-      move: (data: PvPMoveEvent) => {
+      move: (data) => {
+        const moveData = data as unknown as PvPMoveEvent;
         // Ghost flip highlight
-        setGhostFlippedIds((prev) => new Set(prev).add(data.cardId));
+        setGhostFlippedIds((prev) => new Set(prev).add(moveData.cardId));
         if (ghostTimerRef.current) window.clearTimeout(ghostTimerRef.current);
         ghostTimerRef.current = window.setTimeout(() => setGhostFlippedIds(new Set()), 800);
       },
-      finish: (data: PvPFinishEvent) => {
-        setTotals((t) => ({ ...t, [data.playerId]: (t[data.playerId] ?? 0) + data.durationMs }));
+      finish: (data) => {
+        const finishData = data as unknown as PvPFinishEvent;
+        setTotals((t) => ({ ...t, [finishData.playerId]: (t[finishData.playerId] ?? 0) + finishData.durationMs }));
       },
-      winner: (data: PvPWinnerEvent) => {
-        toast({ title: `Winner: ${data.winnerId}`, description: `Tổng thời gian: ${JSON.stringify(data.totals)}` });
+      winner: (data) => {
+        const winnerData = data as unknown as PvPWinnerEvent;
+        toast({ title: `Winner: ${winnerData.winnerId}`, description: `Tổng thời gian: ${JSON.stringify(winnerData.totals)}` });
       },
-    } as any);
+    });
     setJoined(true);
     return channel;
   }, [realtime, toast]);
@@ -72,8 +76,9 @@ export default function PvPMatch({ playerId, playerName, level = GAME_LEVELS[1] 
       setSeed(newSeed);
       setStartSignal(Date.now());
       toast({ title: `Bắt đầu Round ${round}`, description: `Seed ${newSeed}` });
-    } catch (e:any) {
-      toast({ title: 'Seed failed', description: e?.message ?? String(e), variant: 'destructive' });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({ title: 'Seed failed', description: message, variant: 'destructive' });
     }
   };
 
@@ -130,7 +135,7 @@ export default function PvPMatch({ playerId, playerName, level = GAME_LEVELS[1] 
             <Badge className="bg-secondary text-secondary-foreground">Seed: {seed ?? '-'}</Badge>
             <Badge className="bg-secondary text-secondary-foreground">Round: {round}/{bestOf}</Badge>
             <Badge className="bg-secondary text-secondary-foreground">Player: {playerName}</Badge>
-            {lastCommit && <Badge className="border">Last commit: {lastCommit.slice(0,10)}…</Badge>}
+            {lastCommit && <Badge className="border">Last commit: {lastCommit.slice(0, 10)}…</Badge>}
           </CardContent>
         </Card>
 
@@ -138,7 +143,7 @@ export default function PvPMatch({ playerId, playerName, level = GAME_LEVELS[1] 
           playerName={playerName}
           level={level}
           onGameComplete={(result) => handleLocalFinish(result.duration)}
-          onGoHome={() => {}}
+          onGoHome={() => { }}
           seed={seed}
           startSignal={startSignal}
           onCardEvent={handleCardEvent}

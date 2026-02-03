@@ -9,32 +9,20 @@ import { GameLevel, GAME_LEVELS } from '@/types/game';
 import { Play, Trophy, Clock, Target, Zap, Wallet, Swords } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-// Declare window.ethereum type
-declare global {
-  interface Window {
-    ethereum?: {
-      isMetaMask?: boolean;
-      request: (args: { method: string; params?: unknown[] }) => Promise<string[]>;
-      selectedAddress: string | null;
-      on: (event: string, handler: (...args: unknown[]) => void) => void;
-      removeListener: (event: string, handler: (...args: unknown[]) => void) => void;
-    };
-  }
-}
-
 
 interface GameHomeProps {
   onStartGame: (playerName: string, level: GameLevel) => void;
 }
 
-export function GameHome({ onStartGame}: GameHomeProps) {
+export function GameHome({ onStartGame }: GameHomeProps) {
   const [playerName, setPlayerName] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<GameLevel>(GAME_LEVELS[0]);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
 
-  
+
   // 👉 THÊM Ở ĐÂY — ngay dưới các useState ở trên
   const [showWalletPopup, setShowWalletPopup] = useState(false);
 
@@ -81,7 +69,7 @@ export function GameHome({ onStartGame}: GameHomeProps) {
     checkWalletConnection();
 
     // Listen for account changes
-    if (window.ethereum) {
+    if (window.ethereum?.on) {
       const handleAccountsChanged = (...args: unknown[]) => {
         const accounts = args[0] as string[];
         if (accounts && accounts.length > 0) {
@@ -96,7 +84,7 @@ export function GameHome({ onStartGame}: GameHomeProps) {
       window.ethereum.on('accountsChanged', handleAccountsChanged);
 
       return () => {
-        if (window.ethereum) {
+        if (window.ethereum?.removeListener) {
           window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
         }
       };
@@ -104,6 +92,9 @@ export function GameHome({ onStartGame}: GameHomeProps) {
   }, []);
 
   const handleConnectWallet = async () => {
+    // Prevent duplicate connection attempts
+    if (isConnecting || isWalletConnected) return;
+
     if (!window.ethereum) {
       toast({
         title: "MetaMask không được tìm thấy",
@@ -113,11 +104,14 @@ export function GameHome({ onStartGame}: GameHomeProps) {
       return;
     }
 
+    setIsConnecting(true);
+
     try {
       // Request account access
-      const accounts = await window.ethereum.request({
+      const result = await window.ethereum.request({
         method: 'eth_requestAccounts',
       });
+      const accounts = result as string[];
 
       if (accounts && accounts.length > 0) {
         setIsWalletConnected(true);
@@ -134,6 +128,8 @@ export function GameHome({ onStartGame}: GameHomeProps) {
         description: error instanceof Error ? error.message : "Không thể kết nối với MetaMask",
         variant: "destructive",
       });
+    } finally {
+      setIsConnecting(false);
     }
   };
 
@@ -165,48 +161,49 @@ export function GameHome({ onStartGame}: GameHomeProps) {
     <div className="min-h-screen bg-gradient-game flex items-center justify-center p-4 relative">
       {/* Connect Wallet Button - Top Right */}
       <div className="fixed top-4 right-4 z-50">
-  <div className="relative">
-    <Button
-      onClick={handleWalletButtonClick} // 👈 thay handleConnectWallet bằng hàm mới
-      className={`h-9 px-3 ${
-        isWalletConnected
-          ? 'bg-green-600 hover:bg-green-700 text-white'
-          : 'border-2 border-purple-300 hover:border-purple-500 bg-white'
-      }`}
-    >
-      <Wallet className="w-4 h-4 mr-2" />
-      {isWalletConnected
-        ? (walletAddress ? formatAddress(walletAddress) : 'Đã kết nối')
-        : 'Connect Wallet'}
-    </Button>
+        <div className="relative">
+          <Button
+            onClick={handleWalletButtonClick} // 👈 thay handleConnectWallet bằng hàm mới
+            className={`h-9 px-3 ${isWalletConnected
+              ? 'bg-green-600 hover:bg-green-700 text-white'
+              : 'border-2 border-purple-300 hover:border-purple-500 bg-white'
+              }`}
+          >
+            <Wallet className="w-4 h-4 mr-2" />
+            {isConnecting
+              ? 'Đang kết nối...'
+              : isWalletConnected
+                ? (walletAddress ? formatAddress(walletAddress) : 'Đã kết nối')
+                : 'Connect Wallet'}
+          </Button>
 
-    {/* Popup hiển thị khi đã kết nối */}
-    {showWalletPopup && isWalletConnected && (
-      <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 animate-fade-in">
-        <p className="text-sm text-gray-700 mb-2">
-          <strong>Địa chỉ:</strong><br />
-          <span className="break-all text-gray-500">
-            {walletAddress}
-          </span>
-        </p>
-        <Button
-          onClick={disconnectWallet}
-          className="w-full h-9"
-        >
-          Ngắt kết nối
-        </Button>
+          {/* Popup hiển thị khi đã kết nối */}
+          {showWalletPopup && isWalletConnected && (
+            <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 animate-fade-in">
+              <p className="text-sm text-gray-700 mb-2">
+                <strong>Địa chỉ:</strong><br />
+                <span className="break-all text-gray-500">
+                  {walletAddress}
+                </span>
+              </p>
+              <Button
+                onClick={disconnectWallet}
+                className="w-full h-9"
+              >
+                Ngắt kết nối
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
-    )}
-  </div>
-</div>
 
 
       <div className="max-w-md w-full space-y-6">
         {/* Game Title */}
         <div className="text-center animate-fade-in">
-            <h1 className="text-4xl font-bold text-purple-600 mb-2">
-              🧠 Memory Matching Game
-            </h1>
+          <h1 className="text-4xl font-bold text-purple-600 mb-2">
+            🧠 Memory Matching Game
+          </h1>
           <p className="text-muted-foreground">
             Thử thách trí nhớ của bạn!
           </p>
@@ -242,9 +239,8 @@ export function GameHome({ onStartGame}: GameHomeProps) {
                   <button
                     key={level.name}
                     onClick={() => setSelectedLevel(level)}
-                    className={`level-card ${
-                      selectedLevel?.name === level.name ? 'selected' : ''
-                    }`}
+                    className={`level-card ${selectedLevel?.name === level.name ? 'selected' : ''
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -259,7 +255,7 @@ export function GameHome({ onStartGame}: GameHomeProps) {
                         </Badge>
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
                       <span>{level.pairs} cặp</span>
                       {level.timeLimit && (
@@ -290,14 +286,14 @@ export function GameHome({ onStartGame}: GameHomeProps) {
               Bắt đầu chơi
             </Button>
 
-        <Button
-          onClick={handleStartPvP}
-          disabled={!playerName.trim()}
-          className="w-full mt-2 h-10 border border-purple-300 hover:bg-purple-50"
-        >
-          <Swords className="w-5 h-5 mr-2" />
-          1v1 Race (PvP)
-        </Button>
+            <Button
+              onClick={handleStartPvP}
+              disabled={!playerName.trim()}
+              className="w-full mt-2 h-10 border border-purple-300 hover:bg-purple-50"
+            >
+              <Swords className="w-5 h-5 mr-2" />
+              1v1 Race (PvP)
+            </Button>
 
             <Button
               onClick={() => { window.location.href = '/leaderboard'; }}
@@ -311,16 +307,16 @@ export function GameHome({ onStartGame}: GameHomeProps) {
 
         {/* Game Rules */}
         <Card className="bg-card/60 backdrop-blur-sm">
-        <CardContent className="p-4">
-          <h3 className="font-semibold mb-2 text-purple-600">Cách chơi:</h3>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• Lật tối đa 2 thẻ mỗi lượt</li>
-            <li>• Tìm các cặp hình giống nhau</li>
-            <li>• Hoàn thành tất cả cặp để thắng</li>
-            <li>• Chú ý giới hạn thời gian và số lượt!</li>
-          </ul>
-        </CardContent>
-      </Card>
+          <CardContent className="p-4">
+            <h3 className="font-semibold mb-2 text-purple-600">Cách chơi:</h3>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• Lật tối đa 2 thẻ mỗi lượt</li>
+              <li>• Tìm các cặp hình giống nhau</li>
+              <li>• Hoàn thành tất cả cặp để thắng</li>
+              <li>• Chú ý giới hạn thời gian và số lượt!</li>
+            </ul>
+          </CardContent>
+        </Card>
 
       </div>
     </div>

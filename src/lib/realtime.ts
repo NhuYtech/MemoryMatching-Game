@@ -1,12 +1,16 @@
 import Pusher, { Channel } from 'pusher-js';
 import { ENV } from '@/env';
 
-type EventPayload = any;
+// Generic event payload type - can be extended per use case
+type EventPayload = Record<string, unknown>;
 
 export interface RealtimeClient {
   connect: () => void;
-  subscribe: (channelName: string, handlers: Record<string, (data: EventPayload) => void>) => Channel | null;
-  trigger: (channelName: string, event: string, data: EventPayload) => void;
+  subscribe: <T = Record<string, unknown>>(
+    channelName: string,
+    handlers: Record<string, (data: T) => void>
+  ) => Channel | null;
+  trigger: (channelName: string, event: string, data: Record<string, unknown>) => void;
 }
 
 export function createRealtimeClient(): RealtimeClient | null {
@@ -26,7 +30,8 @@ export function createRealtimeClient(): RealtimeClient | null {
     subscribe: (channelName, handlers) => {
       const ch = pusher.subscribe(channelName);
       Object.entries(handlers).forEach(([event, handler]) => {
-        ch.bind(event, handler as any);
+        // Pusher's bind expects (event: string, callback: Function)
+        ch.bind(event, handler as (data: unknown) => void);
       });
       return ch;
     },
@@ -38,5 +43,4 @@ export function createRealtimeClient(): RealtimeClient | null {
     },
   };
 }
-
 

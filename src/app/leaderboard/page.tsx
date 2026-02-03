@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export default function LeaderboardPage() {
-  const [rows, setRows] = useState<Array<{player:string; score:number; season:number}>>([]);
+  const [rows, setRows] = useState<Array<{ player: string; score: number; season: number }>>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -17,11 +17,12 @@ export default function LeaderboardPage() {
           const prev = aggregated.get(l.player) ?? 0;
           if (l.score > prev) aggregated.set(l.player, l.score);
         });
-        const list = Array.from(aggregated.entries()).map(([player, score]) => ({player, score, season: 0}))
-          .sort((a,b)=> b.score - a.score).slice(0, 50);
+        const list = Array.from(aggregated.entries()).map(([player, score]) => ({ player, score, season: 0 }))
+          .sort((a, b) => b.score - a.score).slice(0, 50);
         setRows(list);
-      } catch (e:any) {
-        setError(e?.message ?? String(e));
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        setError(message);
       }
     })();
   }, []);
@@ -39,8 +40,8 @@ export default function LeaderboardPage() {
               {rows.map((r, idx) => (
                 <div key={r.player} className="flex items-center justify-between border-b py-2">
                   <div className="flex items-center gap-3">
-                    <Badge color="secondary">#{idx+1}</Badge>
-                    <span className="font-mono">{r.player.slice(0,6)}...{r.player.slice(-4)}</span>
+                    <Badge color="secondary">#{idx + 1}</Badge>
+                    <span className="font-mono">{r.player.slice(0, 6)}...{r.player.slice(-4)}</span>
                   </div>
                   <div className="font-semibold">{r.score}</div>
                 </div>

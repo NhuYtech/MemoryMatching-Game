@@ -1,10 +1,19 @@
+// Type-safe environment variable access
+interface ProcessEnv {
+  [key: string]: string | undefined;
+}
+
+interface ImportMetaEnv {
+  [key: string]: string | undefined;
+}
+
 export function getEnv(key: string): string | undefined {
   // Prefer Next.js public env
-  if (typeof process !== 'undefined' && (process as any).env && (process as any).env[key] !== undefined) {
-    return (process as any).env[key];
+  if (typeof process !== 'undefined' && process.env && (process.env as ProcessEnv)[key] !== undefined) {
+    return (process.env as ProcessEnv)[key];
   }
   // Fallback for Vite style
-  const meta: any = (typeof import.meta !== 'undefined' ? (import.meta as any).env : undefined);
+  const meta: ImportMetaEnv | undefined = (typeof import.meta !== 'undefined' ? (import.meta as { env?: ImportMetaEnv }).env : undefined);
   return meta ? meta[key] : undefined;
 }
 
@@ -16,5 +25,4 @@ export const ENV = {
   MATCH_ESCROW: getEnv('NEXT_PUBLIC_MATCH_ESCROW') || getEnv('VITE_MATCH_ESCROW'),
   MEMORY_MASTER: getEnv('NEXT_PUBLIC_MEMORY_MASTER') || getEnv('VITE_MEMORY_MASTER'),
 };
-
 
